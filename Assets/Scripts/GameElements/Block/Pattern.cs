@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace Game.GameElements
 {
@@ -36,8 +37,7 @@ public class Pattern : MonoBehaviour, IConvertGameObjectToEntity
 		}
 
 		dstManager.AddComponentData(entity, new Runtime.PatternInfo() {
-			width  = patternWidth,
-			height = patternHeight
+			patternSize  = new float2(patternWidth, patternHeight),
 		});
 	}
 }

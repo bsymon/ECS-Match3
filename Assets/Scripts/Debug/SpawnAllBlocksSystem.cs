@@ -4,7 +4,7 @@ using Unity.Transforms;
 using Unity.Mathematics;
 using Game.GameElements.Runtime;
 
-namespace Game.Debug
+namespace Game.GameDebug
 {
 
 public class SpawnAllBlocksSystem : ComponentSystem

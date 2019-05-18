@@ -6,10 +6,10 @@ namespace Game.GameElements.Runtime
 {
 
 [System.Serializable]
-public struct PatternInfo : IComponentData
+public struct LevelInfo : IComponentData
 {
 
-	public float2 patternSize;
+	public float2 levelSize;
 
 }
 
