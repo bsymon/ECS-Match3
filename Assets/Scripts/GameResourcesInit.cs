@@ -18,6 +18,9 @@ public class GameResourcesInit : MonoBehaviour
 	[SerializeField]
 	private Pattern[] patternPrefabs = null;
 
+	[SerializeField]
+	private BoxCollider2D inputPlaceholderPrefab = null;
+
 	// PRIVATES FIELDS
 
 	private EntityManager entityManager;

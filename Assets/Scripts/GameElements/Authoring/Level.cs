@@ -15,10 +15,24 @@ public class Level : MonoBehaviour, IConvertGameObjectToEntity
 	[SerializeField]
 	private float2 levelSize;
 
+	// ACCESSORS
+
+	public float2 LevelSize
+	{
+		get { return levelSize; }
+	}
+
+	public Entity LevelEntity
+	{
+		get; private set;
+	}
+
 	// INTERFACES
 
 	public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
 	{
+		LevelEntity = entity;
+
 		var levelBuffer = dstManager.AddBuffer<Runtime.Level>(entity);
 		var levelInfo   = new Runtime.LevelInfo() { levelSize = levelSize };
 
