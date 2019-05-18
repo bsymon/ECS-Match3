@@ -342,6 +342,8 @@ MonoBehaviour:
   - {fileID: 334807738658824373, guid: a7cd070366aaf154a8f3a6a4fbb2527d, type: 3}
   - {fileID: 334807738658824373, guid: 1b7fbc41f157ebd4185e9543804040cf, type: 3}
   - {fileID: 334807738658824373, guid: 45e5e05fdd301604bb3ece613f4410c5, type: 3}
+  patternPrefabs:
+  - {fileID: 6913187847794503511, guid: 4b220c334c9a0c940b7db92b06d3e883, type: 3}
 --- !u!1 &1276147708
 GameObject:
   m_ObjectHideFlags: 0

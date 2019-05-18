@@ -15,6 +15,9 @@ public class GameResourcesInit : MonoBehaviour
 	[SerializeField]
 	private Block[] blockPrefabs = null;
 
+	[SerializeField]
+	private Pattern[] patternPrefabs = null;
+
 	// PRIVATES FIELDS
 
 	private EntityManager entityManager;
@@ -26,6 +29,7 @@ public class GameResourcesInit : MonoBehaviour
 		entityManager = World.Active.EntityManager;
 
 		LoadBlockPrefabs();
+		LoadPatternPrefabs();
 	}
 
 	// PRIVATES METHODS
@@ -37,6 +41,16 @@ public class GameResourcesInit : MonoBehaviour
 			var blockEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(blockPrefab.gameObject, World.Active);
 
 			entityManager.SetName(blockEntityPrefab, blockPrefab.gameObject.name);
+		}
+	}
+
+	private void LoadPatternPrefabs()
+	{
+		foreach(var patternPrefab in patternPrefabs)
+		{
+			var blockEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(patternPrefab.gameObject, World.Active);
+
+			entityManager.SetName(blockEntityPrefab, patternPrefab.gameObject.name);
 		}
 	}
 
