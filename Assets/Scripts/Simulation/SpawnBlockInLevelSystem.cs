@@ -36,6 +36,7 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 
 	override protected void OnUpdate()
 	{
+		// TODO (Benjamin) maybe do init in OnStartRunning()
 		if(!blockPrefabsInit)
 			InitBlockPrefabs();
 
