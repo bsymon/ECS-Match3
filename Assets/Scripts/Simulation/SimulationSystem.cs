@@ -24,6 +24,7 @@ public class SimulationSystem : JobComponentSystem
 	private Entity levelEntity;
 
 	private EntityQuery swapQueriesQuery;
+	private NativeHashMap<int, float2> patternMatchRequest;
 
 	// LIFE-CYCLE
 	
@@ -42,18 +43,36 @@ public class SimulationSystem : JobComponentSystem
 	
 	protected override void OnStartRunning()
 	{
+		patternMatchRequest = new NativeHashMap<int, float2>(10, Allocator.Persistent);
 		GetLevelInfo();
+	}
+
+	protected override void OnStopRunning()
+	{
+		patternMatchRequest.Dispose();
 	}
 	
 	protected override JobHandle OnUpdate(JobHandle jobs)
 	{
+		if(patternMatchRequest.IsCreated)
+		{
+			patternMatchRequest.Clear();
+		}
+
 		var swapTestJob = new SwapTest() {
 			level     = EntityManager.GetBuffer<Level>(levelEntity),
 			levelInfo = level,
-			cmdBuff   = cmdBuffer.CreateCommandBuffer().ToConcurrent()
+			cmdBuff   = cmdBuffer.CreateCommandBuffer().ToConcurrent(),
+			patternMatchRequest = patternMatchRequest.ToConcurrent()
+		};
+
+		var patternMatching = new PatternMatching() {
+			patternsBufferLookup = GetBufferFromEntity<Pattern>(isReadOnly: true),
+			patternMatchRequest  = patternMatchRequest
 		};
 
 		jobs = swapTestJob.Schedule(this, jobs);
+		jobs = patternMatching.Schedule(this, jobs);
 		
 		return jobs;
 	}
@@ -82,6 +101,8 @@ public class SimulationSystem : JobComponentSystem
 		[ReadOnly]
 		public LevelInfo levelInfo;
 
+		public NativeHashMap<int, float2>.Concurrent patternMatchRequest;
+
 		public EntityCommandBuffer.Concurrent cmdBuff;
 		
 		// -- //
@@ -101,9 +122,42 @@ public class SimulationSystem : JobComponentSystem
 
 				level[blockAIndex] = blockBInfo;
 				level[blockBIndex] = blockAInfo;
+
+				patternMatchRequest.TryAdd(entityIndex, query.gridPosB);
+
+				Debug.Log("New pattern matching query");
 			}
 
 			cmdBuff.DestroyEntity(entityIndex, entity);
+		}
+	}
+
+	[RequireComponentTag(typeof(Prefab))]
+	struct PatternMatching : IJobForEachWithEntity<PatternInfo>
+	{
+		[ReadOnly]
+		public BufferFromEntity<Pattern> patternsBufferLookup;
+
+		[ReadOnly]
+		public NativeHashMap<int, float2> patternMatchRequest;
+		
+		// -- //
+		
+		public void Execute(Entity entity, int entityIndex, ref PatternInfo patternInfo)
+		{
+			var requests = patternMatchRequest.GetValueArray(Allocator.Temp);
+			
+			Debug.Log("Query : " + requests.Length);
+
+			for(int i = 0; i < requests.Length; ++i)
+			{
+				Debug.Log("Request !!!!");
+			}
+
+			requests.Dispose();
+			
+			// TODO loop thru all pattern matching request
+			//		pass level buffer & info
 		}
 	}
 }
