@@ -51,6 +51,9 @@ public class GameResourcesInit : MonoBehaviour
 	{
 		foreach(var patternPrefab in patternPrefabs)
 		{
+			if(!patternPrefab.gameObject.activeSelf)
+				continue;
+
 			var blockEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(patternPrefab.gameObject, World.Active);
 
 			entityManager.SetName(blockEntityPrefab, patternPrefab.gameObject.name);

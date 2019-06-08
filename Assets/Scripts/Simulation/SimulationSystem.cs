@@ -271,7 +271,7 @@ public class SimulationSystem : JobComponentSystem
 
 							matchAll = matchAll && matchThis;
 
-							if(matchThis)
+							if(matchThis && shouldMatch)
 							{
 								matchedBlocks[blockMatched] = levelBufferId + 1;
 								blockMatched++;
@@ -282,6 +282,9 @@ public class SimulationSystem : JobComponentSystem
 							// TODO break early if no match
 						}
 					}
+
+					if(matchAll)
+						break;
 				}
 
 				if(matchAll)

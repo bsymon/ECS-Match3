@@ -11,12 +11,12 @@ GameObject:
   - component: {fileID: 4782007989438335873}
   - component: {fileID: 6913187847794503511}
   m_Layer: 0
-  m_Name: PF_Pattern_Column_3Blocks
+  m_Name: PF_Pattern_3x3_Corner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4782007989438335873
 Transform:
   m_ObjectHideFlags: 0
@@ -43,6 +43,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50669ee70a0f4dd42a5e8f40be8bbcce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  patternWidth: 1
+  patternWidth: 3
   patternHeight: 3
-  pattern: 010101
+  pattern: 010000010000010101
