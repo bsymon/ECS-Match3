@@ -63,13 +63,6 @@ public class InputHandler : MonoBehaviour
 			{
 				StoreSelection(hit.collider.gameObject);
 			}
-			
-			// TODO (Benjamin) cast the ray
-			//					get the InputPlaceholder that was hit
-			//					get its gridPosition
-			//					highlight the placeholder
-			//					store the selection
-			//					if 2 placeholders have been selected, create a SwapQuery entity
 		}
 	}
 
@@ -81,12 +74,12 @@ public class InputHandler : MonoBehaviour
 
 		if(placeholder == null)
 			return;
-		
+
 		if(selectionA == null)
 			selectionA = placeholder;
 		else if(selectionB == null)
 			selectionB = placeholder;
-		
+
 		if(selectionA != null && selectionB != null)
 		{
 			simulation.CreateSwapQuery(selectionA.GridPosition, selectionB.GridPosition);

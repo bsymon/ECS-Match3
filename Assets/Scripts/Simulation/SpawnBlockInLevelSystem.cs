@@ -83,11 +83,11 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 	{
 		var levelBuffer = EntityManager.GetBuffer<Level>(levelEntity);
 
-		for(var y = 0; y < levelInfo.levelSize.y; ++y)
+		for(var y = 0; y < levelInfo.size.y; ++y)
 		{
-			for(var x = 0; x < levelInfo.levelSize.x; ++x)
+			for(var x = 0; x < levelInfo.size.x; ++x)
 			{
-				var i = x + levelInfo.levelSize.x * y;
+				var i = x + levelInfo.size.x * y;
 
 				levelBuffer.Add(-1);
 			}
@@ -98,11 +98,11 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 
 	private void SpawnBlock(Entity levelEntity, LevelInfo levelInfo)
 	{
-		for(var y = 0; y < levelInfo.levelSize.y; ++y)
+		for(var y = 0; y < levelInfo.size.y; ++y)
 		{
-			for(var x = 0; x < levelInfo.levelSize.x; ++x)
+			for(var x = 0; x < levelInfo.size.x; ++x)
 			{
-				var i = (int) (x + levelInfo.levelSize.x * y);
+				var i = (int) (x + levelInfo.size.x * y);
 				var levelBuffer = EntityManager.GetBuffer<Level>(levelEntity);
 				var currentBlock = levelBuffer[i];
 

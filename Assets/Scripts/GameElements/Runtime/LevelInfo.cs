@@ -9,7 +9,8 @@ namespace Game.GameElements.Runtime
 public struct LevelInfo : IComponentData
 {
 
-	public float2 levelSize;
+	public float2 size;
+	public Entity entity;
 
 }
 

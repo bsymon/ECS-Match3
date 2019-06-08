@@ -9,7 +9,7 @@ namespace Game.GameElements.Runtime
 public struct PatternInfo : IComponentData
 {
 
-	public float2 patternSize;
+	public float2 size;
 
 }
 

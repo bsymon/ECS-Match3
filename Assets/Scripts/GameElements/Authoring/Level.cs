@@ -34,7 +34,10 @@ public class Level : MonoBehaviour, IConvertGameObjectToEntity
 		LevelEntity = entity;
 
 		var levelBuffer = dstManager.AddBuffer<Runtime.Level>(entity);
-		var levelInfo   = new Runtime.LevelInfo() { levelSize = levelSize };
+		var levelInfo   = new Runtime.LevelInfo() {
+			size = levelSize,
+			entity    = entity
+		};
 
 		dstManager.AddComponentData(entity, levelInfo);
 		dstManager.SetName(entity, gameObject.name);

@@ -27,11 +27,11 @@ public class SimulationSystem : JobComponentSystem
 	private NativeHashMap<int, float2> patternMatchRequest;
 
 	// LIFE-CYCLE
-	
+
 	protected override void OnCreateManager()
 	{
 		cmdBuffer = World.GetOrCreateSystem<SimulationCmdBuffer>();
-		
+
 		levelQuery = GetEntityQuery(
 			ComponentType.ReadWrite<LevelInfo>()
 		);
@@ -40,7 +40,7 @@ public class SimulationSystem : JobComponentSystem
 			ComponentType.ReadOnly<SwapQuery>()
 		);
 	}
-	
+
 	protected override void OnStartRunning()
 	{
 		patternMatchRequest = new NativeHashMap<int, float2>(10, Allocator.Persistent);
@@ -51,7 +51,7 @@ public class SimulationSystem : JobComponentSystem
 	{
 		patternMatchRequest.Dispose();
 	}
-	
+
 	protected override JobHandle OnUpdate(JobHandle jobs)
 	{
 		if(patternMatchRequest.IsCreated)
@@ -68,12 +68,14 @@ public class SimulationSystem : JobComponentSystem
 
 		var patternMatching = new PatternMatching() {
 			patternsBufferLookup = GetBufferFromEntity<Pattern>(isReadOnly: true),
-			patternMatchRequest  = patternMatchRequest
+			patternMatchRequest  = patternMatchRequest,
+			levelBufferLookup    = GetBufferFromEntity<Level>(isReadOnly: true),
+			levelInfo            = level
 		};
 
 		jobs = swapTestJob.Schedule(this, jobs);
 		jobs = patternMatching.Schedule(this, jobs);
-		
+
 		return jobs;
 	}
 
@@ -104,9 +106,9 @@ public class SimulationSystem : JobComponentSystem
 		public NativeHashMap<int, float2>.Concurrent patternMatchRequest;
 
 		public EntityCommandBuffer.Concurrent cmdBuff;
-		
+
 		// -- //
-		
+
 		public void Execute(Entity entity, int entityIndex, ref SwapQuery query)
 		{
 			// Check if the blocks are adjacents
@@ -115,9 +117,9 @@ public class SimulationSystem : JobComponentSystem
 
 			if(adjacent)
 			{
-				var blockAIndex = MathHelpers.To1D(query.gridPosA, levelInfo.levelSize.x);
+				var blockAIndex = MathHelpers.To1D(query.gridPosA, levelInfo.size.x);
 				var blockAInfo  = level[blockAIndex];
-				var blockBIndex = MathHelpers.To1D(query.gridPosB, levelInfo.levelSize.x);
+				var blockBIndex = MathHelpers.To1D(query.gridPosB, levelInfo.size.x);
 				var blockBInfo  = level[blockBIndex];
 
 				level[blockAIndex] = blockBInfo;
@@ -140,24 +142,92 @@ public class SimulationSystem : JobComponentSystem
 
 		[ReadOnly]
 		public NativeHashMap<int, float2> patternMatchRequest;
-		
+
+		[ReadOnly]
+		public BufferFromEntity<Level> levelBufferLookup;
+
+		[ReadOnly]
+		public LevelInfo levelInfo;
+
 		// -- //
-		
+
 		public void Execute(Entity entity, int entityIndex, ref PatternInfo patternInfo)
 		{
+			if(patternMatchRequest.Length == 0)
+				return;
+
 			var requests = patternMatchRequest.GetValueArray(Allocator.Temp);
-			
-			Debug.Log("Query : " + requests.Length);
+			var pattern  = patternsBufferLookup[entity];
+
+			// Debug.Log("Query : " + requests.Length);
 
 			for(int i = 0; i < requests.Length; ++i)
 			{
-				Debug.Log("Request !!!!");
+				Match(pattern, ref patternInfo, requests[i]);
+				// Debug.Log("Request !!!!");
 			}
 
 			requests.Dispose();
-			
-			// TODO loop thru all pattern matching request
-			//		pass level buffer & info
+		}
+
+		// -- //
+
+		private void Match(DynamicBuffer<Pattern> pattern, ref PatternInfo patternInfo, float2 gridPos)
+		{
+			var level        = levelBufferLookup[levelInfo.entity];
+			var blockToMatch = level[MathHelpers.To1D(gridPos, levelInfo.size.x)];
+			var height = patternInfo.size.y;
+			var width  = patternInfo.size.x;
+			var matchAll = true;
+
+			for(int patternY = 0; patternY < height; ++patternY)
+			{
+				for(int patternX = 0; patternX < width; ++patternX)
+				{
+					// First : loop on the pattern to get the position in the level
+					//			from which to start the pattern match
+
+					matchAll = true;
+
+					var patternOffset = new int2(patternX, patternY);
+					var levelStart    = gridPos - patternOffset;
+
+					for(int levelY = 0; levelY < height; ++levelY)
+					{
+						for(int levelX = 0; levelX < width; ++levelX)
+						{
+							// Second : loop on the pattern and level at the same time to check if block match
+
+							var localPos = new int2(levelX, levelY);
+							var blockPos = levelStart + localPos;
+
+							var levelBufferId = MathHelpers.To1D(blockPos, levelInfo.size.x);
+
+							if(levelBufferId < 0 || levelBufferId >= level.Length)
+							{
+								matchAll = false;
+								break;
+							}
+
+							var block    = level[levelBufferId];
+							var shouldMatch = pattern[MathHelpers.To1D(localPos, width)].match;
+							var matchThis   = !shouldMatch || block.blockId == blockToMatch.blockId;
+
+							matchAll = matchAll && matchThis;
+
+							Debug.Log($"Pos : {blockPos} | Local : {localPos} | Should match ? {shouldMatch} | Match {blockToMatch.blockId} with {block.blockId} | Match this ? {matchThis} | All ? {matchAll}");
+
+
+							// TODO break early if no match
+						}
+					}
+				}
+
+				if(matchAll)
+					break;
+			}
+
+			Debug.Log($"Match ? {matchAll}");
 		}
 	}
 }

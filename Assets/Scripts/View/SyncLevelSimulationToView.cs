@@ -24,24 +24,24 @@ public class SyncLevelSimulationToView : JobComponentSystem
 	private Entity levelEntity;
 
 	// LIFE-CYCLE
-	
+
 	protected override void OnCreateManager()
 	{
 		cmdBuffer = World.GetOrCreateSystem<SyncLevelBarrier>();
-		
+
 		levelQuery = GetEntityQuery(
 			ComponentType.ReadOnly<LevelInfo>()
 		);
 	}
-	
+
 	protected override void OnStartRunning()
 	{
 		GetLevelInfo();
 	}
-	
+
 	protected override JobHandle OnUpdate(JobHandle jobs)
 	{
-		var loopCount = (int) (level.levelSize.x * level.levelSize.y);
+		var loopCount = (int) (level.size.x * level.size.y);
 		var syncLevel = new SyncLevel() {
 			entityToBuffer = GetBufferFromEntity<Level>(true),
 			levelEntity    = levelEntity,
@@ -51,7 +51,7 @@ public class SyncLevelSimulationToView : JobComponentSystem
 
 
 		jobs = syncLevel.Schedule(loopCount, 2, jobs);
-		
+
 		return jobs;
 	}
 
@@ -75,25 +75,25 @@ public class SyncLevelSimulationToView : JobComponentSystem
 	{
 		[ReadOnly]
 		public BufferFromEntity<Level> entityToBuffer;
-		
+
 		[ReadOnly]
 		public Entity levelEntity;
-		
+
 		[ReadOnly]
 		public LevelInfo levelInfo;
 
 		public EntityCommandBuffer.Concurrent cmdBuffer;
-		
+
 		// -- //
-		
+
 		public void Execute(int i)
 		{
 			var level = entityToBuffer[levelEntity];
-			
+
 			var blockInfo = level[i];
 			var block     = new Block() {
 				blockId      = blockInfo.blockId,
-				gridPosition = MathHelpers.To2D(i, (int) levelInfo.levelSize.x)
+				gridPosition = MathHelpers.To2D(i, (int) levelInfo.size.x)
 			};
 
 			cmdBuffer.SetComponent(i, blockInfo.entity, block);
