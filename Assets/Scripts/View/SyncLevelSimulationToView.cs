@@ -91,6 +91,10 @@ public class SyncLevelSimulationToView : JobComponentSystem
 			var level = entityToBuffer[levelEntity];
 
 			var blockInfo = level[i];
+
+			if(blockInfo.IsEmpty)
+				return;
+
 			var block     = new Block() {
 				blockId      = blockInfo.blockId,
 				gridPosition = MathHelpers.To2D(i, (int) levelInfo.size.x)

@@ -69,10 +69,13 @@ public class SimulationSystem : JobComponentSystem
 			patternMatchRequest.Clear();
 		}
 
+		var blocksToDelete = new NativeArray<int>(20, Allocator.TempJob);
+		var jobCmdBuffer   = cmdBuffer.CreateCommandBuffer().ToConcurrent();
+
 		var swapTestJob = new SwapTest() {
 			level     = EntityManager.GetBuffer<Level>(levelEntity),
 			levelInfo = level,
-			cmdBuff   = cmdBuffer.CreateCommandBuffer().ToConcurrent(),
+			cmdBuff   = jobCmdBuffer,
 			patternMatchRequest = patternMatchRequest.ToConcurrent()
 		};
 
@@ -81,11 +84,20 @@ public class SimulationSystem : JobComponentSystem
 			patternMatchRequest  = patternMatchRequest,
 			patternsInfo         = patterns,
 			levelBufferLookup    = GetBufferFromEntity<Level>(isReadOnly: true),
-			levelInfo            = level
+			levelInfo            = level,
+			blocksToDelete        = blocksToDelete
+		};
+
+		var deleteBlocks = new DeleteBlock() {
+			blocksToDelete    = blocksToDelete,
+			levelBufferLookup = GetBufferFromEntity<Level>(isReadOnly: false),
+			levelInfo         = level,
+			cmdBuffer         = jobCmdBuffer
 		};
 
 		jobs = swapTestJob.Schedule(this, jobs);
 		jobs = patternMatching.Schedule(jobs);
+		jobs = deleteBlocks.Schedule(blocksToDelete.Length, 2, jobs);
 
 		return jobs;
 	}
@@ -163,6 +175,12 @@ public class SimulationSystem : JobComponentSystem
 		[ReadOnly]
 		public LevelInfo levelInfo;
 
+		public NativeArray<int> blocksToDelete;
+
+		// -- //
+
+		private int blockMatched;
+
 		// -- //
 
 		public void Execute()
@@ -170,16 +188,24 @@ public class SimulationSystem : JobComponentSystem
 			if(patternMatchRequest.Length == 0)
 				return;
 
+			blockMatched = 0;
 			var requests = patternMatchRequest.GetValueArray(Allocator.Temp);
 
 			for(int i = 0; i < requests.Length; ++i)
 			{
 				for(int j = 0; j < patternsInfo.Length; ++j)
 				{
-					var patternInfo = patternsInfo[j];
-					var pattern     = patternsBufferLookup[patternInfo.entity];
+					var patternInfo   = patternsInfo[j];
+					var pattern       = patternsBufferLookup[patternInfo.entity];
+					var matchedBlocks = new NativeArray<int>(pattern.Length, Allocator.Temp);
+					var match         = Match(pattern, ref patternInfo, requests[i], matchedBlocks);
 
-					if(Match(pattern, ref patternInfo, requests[i]))
+					if(match)
+						AddMatchedBlockToDelete(matchedBlocks);
+
+					matchedBlocks.Dispose();
+
+					if(match)
 						break;
 				}
 			}
@@ -189,13 +215,25 @@ public class SimulationSystem : JobComponentSystem
 
 		// -- //
 
-		private bool Match(DynamicBuffer<Pattern> pattern, ref PatternInfo patternInfo, float2 gridPos)
+		private void AddMatchedBlockToDelete(NativeArray<int> blocks)
+		{
+			var addTo = blockMatched + blocks.Length;
+
+			for(int i = blockMatched, j = 0; i < addTo; ++i, ++j)
+			{
+				blocksToDelete[i] = blocks[j];
+			}
+		}
+
+		private bool Match(DynamicBuffer<Pattern> pattern, ref PatternInfo patternInfo,
+				float2 gridPos, NativeArray<int> matchedBlocks)
 		{
 			var level        = levelBufferLookup[levelInfo.entity];
 			var blockToMatch = level[MathHelpers.To1D(gridPos, levelInfo.size.x)];
-			var height = patternInfo.size.y;
-			var width  = patternInfo.size.x;
-			var matchAll = true;
+			var height       = patternInfo.size.y;
+			var width        = patternInfo.size.x;
+			var matchAll     = true;
+			var blockMatched = 0;
 
 			for(int patternY = 0; patternY < height; ++patternY)
 			{
@@ -204,7 +242,8 @@ public class SimulationSystem : JobComponentSystem
 					// First : loop on the pattern to get the position in the level
 					//			from which to start the pattern match
 
-					matchAll = true;
+					matchAll     = true;
+					blockMatched = 0;
 
 					var patternOffset = new int2(patternX, patternY);
 					var levelStart    = gridPos - patternOffset;
@@ -232,8 +271,13 @@ public class SimulationSystem : JobComponentSystem
 
 							matchAll = matchAll && matchThis;
 
-							Debug.Log($"Pos : {blockPos} | Local : {localPos} | Should match ? {shouldMatch} | Match {blockToMatch.blockId} with {block.blockId} | Match this ? {matchThis} | All ? {matchAll}");
+							if(matchThis)
+							{
+								matchedBlocks[blockMatched] = levelBufferId + 1;
+								blockMatched++;
+							}
 
+							Debug.Log($"Pos : {blockPos} | Local : {localPos} | Should match ? {shouldMatch} | Match {blockToMatch.blockId} with {block.blockId} | Match this ? {matchThis} | All ? {matchAll}");
 
 							// TODO break early if no match
 						}
@@ -247,6 +291,37 @@ public class SimulationSystem : JobComponentSystem
 			Debug.Log($"Match ? {matchAll}");
 
 			return matchAll;
+		}
+	}
+
+	struct DeleteBlock : IJobParallelFor
+	{
+		[ReadOnly]
+		[DeallocateOnJobCompletion]
+		public NativeArray<int> blocksToDelete;
+
+		[ReadOnly]
+		public BufferFromEntity<Level> levelBufferLookup;
+
+		[ReadOnly]
+		public LevelInfo levelInfo;
+
+		public EntityCommandBuffer.Concurrent cmdBuffer;
+
+		// -- //
+
+		public void Execute(int index)
+		{
+			var level   = levelBufferLookup[levelInfo.entity];
+			var blockId = blocksToDelete[index] - 1;
+
+			if(blockId < 0)
+				return;
+
+			var block = level[blockId];
+
+			cmdBuffer.DestroyEntity(index, block.entity);
+			level[blockId] = Level.Empty;
 		}
 	}
 }

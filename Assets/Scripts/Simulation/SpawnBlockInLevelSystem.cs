@@ -43,9 +43,10 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 		var levelInfo = GetLevelInfo(out var levelEntity);
 
 		if(!levelFirstInit)
+		{
 			InitLevel(levelEntity, levelInfo);
-
-		SpawnBlock(levelEntity, levelInfo);
+			SpawnBlock(levelEntity, levelInfo);
+		}
 	}
 
 	// PRIVATES METHODS
@@ -89,7 +90,7 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 			{
 				var i = x + levelInfo.size.x * y;
 
-				levelBuffer.Add(-1);
+				levelBuffer.Add(Level.Empty);
 			}
 		}
 
@@ -106,7 +107,7 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 				var levelBuffer = EntityManager.GetBuffer<Level>(levelEntity);
 				var currentBlock = levelBuffer[i];
 
-				if(currentBlock != -1)
+				if(!currentBlock.IsEmpty)
 					continue;
 
 				var blockPrefab = blockPrefabs[UnityEngine.Random.Range(0, blockPrefabs.Length)];
