@@ -37,7 +37,8 @@ public class Pattern : MonoBehaviour, IConvertGameObjectToEntity
 		}
 
 		dstManager.AddComponentData(entity, new Runtime.PatternInfo() {
-			size  = new float2(patternWidth, patternHeight),
+			size   = new float2(patternWidth, patternHeight),
+			entity = entity
 		});
 	}
 }

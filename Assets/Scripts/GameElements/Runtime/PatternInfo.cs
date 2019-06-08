@@ -10,6 +10,7 @@ public struct PatternInfo : IComponentData
 {
 
 	public float2 size;
+	public Entity entity;
 
 }
 

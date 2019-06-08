@@ -26,6 +26,9 @@ public class SimulationSystem : JobComponentSystem
 	private EntityQuery swapQueriesQuery;
 	private NativeHashMap<int, float2> patternMatchRequest;
 
+	private EntityQuery patternsQuery;
+	private NativeArray<PatternInfo> patterns;
+
 	// LIFE-CYCLE
 
 	protected override void OnCreateManager()
@@ -39,16 +42,23 @@ public class SimulationSystem : JobComponentSystem
 		swapQueriesQuery = GetEntityQuery(
 			ComponentType.ReadOnly<SwapQuery>()
 		);
+
+		patternsQuery = GetEntityQuery(
+			ComponentType.ReadOnly<PatternInfo>(),
+			ComponentType.ReadOnly<Prefab>()
+		);
 	}
 
 	protected override void OnStartRunning()
 	{
+		patterns = patternsQuery.ToComponentDataArray<PatternInfo>(Allocator.Persistent);
 		patternMatchRequest = new NativeHashMap<int, float2>(10, Allocator.Persistent);
 		GetLevelInfo();
 	}
 
 	protected override void OnStopRunning()
 	{
+		patterns.Dispose();
 		patternMatchRequest.Dispose();
 	}
 
@@ -69,12 +79,13 @@ public class SimulationSystem : JobComponentSystem
 		var patternMatching = new PatternMatching() {
 			patternsBufferLookup = GetBufferFromEntity<Pattern>(isReadOnly: true),
 			patternMatchRequest  = patternMatchRequest,
+			patternsInfo         = patterns,
 			levelBufferLookup    = GetBufferFromEntity<Level>(isReadOnly: true),
 			levelInfo            = level
 		};
 
 		jobs = swapTestJob.Schedule(this, jobs);
-		jobs = patternMatching.Schedule(this, jobs);
+		jobs = patternMatching.Schedule(jobs);
 
 		return jobs;
 	}
@@ -135,13 +146,16 @@ public class SimulationSystem : JobComponentSystem
 	}
 
 	[RequireComponentTag(typeof(Prefab))]
-	struct PatternMatching : IJobForEachWithEntity<PatternInfo>
+	struct PatternMatching : IJob
 	{
+		[ReadOnly]
+		public NativeHashMap<int, float2> patternMatchRequest;
+
 		[ReadOnly]
 		public BufferFromEntity<Pattern> patternsBufferLookup;
 
 		[ReadOnly]
-		public NativeHashMap<int, float2> patternMatchRequest;
+		public NativeArray<PatternInfo> patternsInfo;
 
 		[ReadOnly]
 		public BufferFromEntity<Level> levelBufferLookup;
@@ -151,20 +165,23 @@ public class SimulationSystem : JobComponentSystem
 
 		// -- //
 
-		public void Execute(Entity entity, int entityIndex, ref PatternInfo patternInfo)
+		public void Execute()
 		{
 			if(patternMatchRequest.Length == 0)
 				return;
 
 			var requests = patternMatchRequest.GetValueArray(Allocator.Temp);
-			var pattern  = patternsBufferLookup[entity];
-
-			// Debug.Log("Query : " + requests.Length);
 
 			for(int i = 0; i < requests.Length; ++i)
 			{
-				Match(pattern, ref patternInfo, requests[i]);
-				// Debug.Log("Request !!!!");
+				for(int j = 0; j < patternsInfo.Length; ++j)
+				{
+					var patternInfo = patternsInfo[j];
+					var pattern     = patternsBufferLookup[patternInfo.entity];
+
+					if(Match(pattern, ref patternInfo, requests[i]))
+						break;
+				}
 			}
 
 			requests.Dispose();
@@ -172,7 +189,7 @@ public class SimulationSystem : JobComponentSystem
 
 		// -- //
 
-		private void Match(DynamicBuffer<Pattern> pattern, ref PatternInfo patternInfo, float2 gridPos)
+		private bool Match(DynamicBuffer<Pattern> pattern, ref PatternInfo patternInfo, float2 gridPos)
 		{
 			var level        = levelBufferLookup[levelInfo.entity];
 			var blockToMatch = level[MathHelpers.To1D(gridPos, levelInfo.size.x)];
@@ -228,6 +245,8 @@ public class SimulationSystem : JobComponentSystem
 			}
 
 			Debug.Log($"Match ? {matchAll}");
+
+			return matchAll;
 		}
 	}
 }
