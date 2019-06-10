@@ -43,7 +43,7 @@ public class SyncLevelSimulationToView : JobComponentSystem
 	{
 		var loopCount = (int) (level.size.x * level.size.y);
 		var syncLevel = new SyncLevel() {
-			entityToBuffer = GetBufferFromEntity<Level>(true),
+			entityToBuffer = GetBufferFromEntity<Level>(isReadOnly: false),
 			levelEntity    = levelEntity,
 			levelInfo = level,
 			cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent()
@@ -94,6 +94,13 @@ public class SyncLevelSimulationToView : JobComponentSystem
 
 			if(blockInfo.IsEmpty)
 				return;
+
+			if(blockInfo.ShouldDelete)
+			{
+				cmdBuffer.DestroyEntity(i, blockInfo.entity);
+				level[i] = Level.Empty;
+				return;
+			}
 
 			var block     = new Block() {
 				blockId      = blockInfo.blockId,

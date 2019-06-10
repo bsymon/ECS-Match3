@@ -7,6 +7,8 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using static Unity.Mathematics.math;
 using Game.GameElements.Runtime;
+using Game.Command;
+using Game.View;
 
 namespace Game.Simulation
 {
@@ -29,11 +31,14 @@ public class SimulationSystem : JobComponentSystem
 	private EntityQuery patternsQuery;
 	private NativeArray<PatternInfo> patterns;
 
+	private ViewCommandStack viewCmdStack;
+
 	// LIFE-CYCLE
 
 	protected override void OnCreateManager()
 	{
-		cmdBuffer = World.GetOrCreateSystem<SimulationCmdBuffer>();
+		cmdBuffer    = World.GetOrCreateSystem<SimulationCmdBuffer>();
+		viewCmdStack = CommandStack.Create<ViewCommandStack>(100);
 
 		levelQuery = GetEntityQuery(
 			ComponentType.ReadWrite<LevelInfo>()
@@ -92,7 +97,8 @@ public class SimulationSystem : JobComponentSystem
 			blocksToDelete    = blocksToDelete,
 			levelBufferLookup = GetBufferFromEntity<Level>(isReadOnly: false),
 			levelInfo         = level,
-			cmdBuffer         = jobCmdBuffer
+			cmdBuffer         = jobCmdBuffer,
+			viewCmdStack = viewCmdStack.ToConcurrent()
 		};
 
 		jobs = swapTestJob.Schedule(this, jobs);
@@ -311,6 +317,8 @@ public class SimulationSystem : JobComponentSystem
 
 		public EntityCommandBuffer.Concurrent cmdBuffer;
 
+		public ViewCommandStack.Concurrent viewCmdStack;
+
 		// -- //
 
 		public void Execute(int index)
@@ -323,8 +331,13 @@ public class SimulationSystem : JobComponentSystem
 
 			var block = level[blockId];
 
-			cmdBuffer.DestroyEntity(index, block.entity);
-			level[blockId] = Level.Empty;
+			if(block.IsEmpty)
+				return;
+
+			block.ShouldDelete = true;
+			level[blockId] = block;
+
+			viewCmdStack.AddCommand<HighligthCommand>(index, block.entity);
 		}
 	}
 }

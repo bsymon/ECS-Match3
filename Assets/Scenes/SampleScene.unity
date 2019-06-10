@@ -467,6 +467,7 @@ MonoBehaviour:
   - {fileID: 334807738658824373, guid: 45e5e05fdd301604bb3ece613f4410c5, type: 3}
   patternPrefabs:
   - {fileID: 6913187847794503511, guid: 4b220c334c9a0c940b7db92b06d3e883, type: 3}
+  - {fileID: 6913187847794503511, guid: 7b8a556e5bc0ef3448599e1c17408933, type: 3}
   inputPlaceholderPrefab: {fileID: 0}
 --- !u!1 &1276147708
 GameObject:

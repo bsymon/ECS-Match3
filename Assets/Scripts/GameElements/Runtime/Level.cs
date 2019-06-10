@@ -26,6 +26,11 @@ public struct Level : IBufferElementData
 		get { return blockId == -1; }
 	}
 
+	public bool ShouldDelete
+	{
+		get; set;
+	}
+
 	// PUBLICS FIELDS
 
 	public int blockId;
