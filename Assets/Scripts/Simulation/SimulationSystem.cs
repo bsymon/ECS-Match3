@@ -38,7 +38,7 @@ public class SimulationSystem : JobComponentSystem
 	protected override void OnCreateManager()
 	{
 		cmdBuffer    = World.GetOrCreateSystem<SimulationCmdBuffer>();
-		viewCmdStack = CommandStack.Create<ViewCommandStack>(100);
+		viewCmdStack = CommandStack.Get<ViewCommandStack>(100);
 
 		levelQuery = GetEntityQuery(
 			ComponentType.ReadWrite<LevelInfo>()
@@ -337,7 +337,7 @@ public class SimulationSystem : JobComponentSystem
 			block.ShouldDelete = true;
 			level[blockId] = block;
 
-			viewCmdStack.AddCommand<HighligthCommand>(index, block.entity);
+			viewCmdStack.AddCommand<HighligthCommand>(index, block.entity, new HighligthCommand(duration: 0.5f));
 		}
 	}
 }

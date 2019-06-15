@@ -7,12 +7,14 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using static Unity.Mathematics.math;
 using Game.GameElements.Runtime;
+using Game.Command;
 
 namespace Game.View
 {
 
 class SyncLevelBarrier : EntityCommandBufferSystem { }
 
+[UpdateAfter(typeof(ViewCommandStack))]
 public class SyncLevelSimulationToView : JobComponentSystem
 {
 	// PRIVATES FIELDS
@@ -23,11 +25,14 @@ public class SyncLevelSimulationToView : JobComponentSystem
 	private LevelInfo level;
 	private Entity levelEntity;
 
+	private ViewCommandStack viewCmdStack;
+
 	// LIFE-CYCLE
 
 	protected override void OnCreateManager()
 	{
-		cmdBuffer = World.GetOrCreateSystem<SyncLevelBarrier>();
+		cmdBuffer    = World.GetOrCreateSystem<SyncLevelBarrier>();
+		viewCmdStack = CommandStack.Get<ViewCommandStack>(100);
 
 		levelQuery = GetEntityQuery(
 			ComponentType.ReadOnly<LevelInfo>()
@@ -49,8 +54,19 @@ public class SyncLevelSimulationToView : JobComponentSystem
 			cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent()
 		};
 
-
 		jobs = syncLevel.Schedule(loopCount, 2, jobs);
+
+		if(!viewCmdStack.HasCommand<HighligthCommand>())
+		{
+			var deleteBlock = new DeleteBlock() {
+				entityToBuffer = GetBufferFromEntity<Level>(isReadOnly: false),
+				levelEntity    = levelEntity,
+				levelInfo = level,
+				cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent()
+			};
+
+			jobs = deleteBlock.Schedule(loopCount, 2, jobs);
+		}
 
 		return jobs;
 	}
@@ -95,19 +111,45 @@ public class SyncLevelSimulationToView : JobComponentSystem
 			if(blockInfo.IsEmpty)
 				return;
 
-			if(blockInfo.ShouldDelete)
-			{
-				cmdBuffer.DestroyEntity(i, blockInfo.entity);
-				level[i] = Level.Empty;
-				return;
-			}
-
 			var block     = new Block() {
 				blockId      = blockInfo.blockId,
 				gridPosition = MathHelpers.To2D(i, (int) levelInfo.size.x)
 			};
 
 			cmdBuffer.SetComponent(i, blockInfo.entity, block);
+		}
+	}
+
+	struct DeleteBlock : IJobParallelFor
+	{
+		[ReadOnly]
+		public BufferFromEntity<Level> entityToBuffer;
+
+		[ReadOnly]
+		public Entity levelEntity;
+
+		[ReadOnly]
+		public LevelInfo levelInfo;
+
+		public EntityCommandBuffer.Concurrent cmdBuffer;
+
+		// -- //
+
+		public void Execute(int i)
+		{
+			var level = entityToBuffer[levelEntity];
+
+			var blockInfo = level[i];
+
+			if(blockInfo.IsEmpty)
+				return;
+
+			if(blockInfo.ShouldDelete)
+			{
+				cmdBuffer.DestroyEntity(i, blockInfo.entity);
+				level[i] = Level.Empty;
+				return;
+			}
 		}
 	}
 }

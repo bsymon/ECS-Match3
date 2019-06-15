@@ -37,6 +37,7 @@ public class Block : MonoBehaviour, IConvertGameObjectToEntity
 		sprite.SetPropertyBlock(materialProp);
 
 		dstManager.AddComponentData(entity, new Runtime.Block() { blockId = blockId });
+		dstManager.AddComponentData(entity, new Unity.Transforms.Scale() { Value = 1 });
 	}
 }
 

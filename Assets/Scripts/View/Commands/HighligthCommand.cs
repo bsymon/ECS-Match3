@@ -9,6 +9,19 @@ public struct HighligthCommand : ICommand
 	{
 		return 0;
 	}
+
+	// -- //
+
+	public float duration;
+	public float remain;
+
+	// -- //
+
+	public HighligthCommand(float duration)
+	{
+		this.duration = duration;
+		this.remain   = duration;
+	}
 }
 
 }
