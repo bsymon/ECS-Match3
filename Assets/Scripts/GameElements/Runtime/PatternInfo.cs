@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -10,8 +10,17 @@ public struct PatternInfo : IComponentData
 {
 
 	public float2 size;
+	public int blocks;
 	public Entity entity;
 
+}
+
+public struct PatternSortByPriority : IComparer<PatternInfo>
+{
+	public int Compare(PatternInfo a, PatternInfo b)
+	{
+		return b.blocks - a.blocks;
+	}
 }
 
 }

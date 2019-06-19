@@ -57,6 +57,8 @@ public class SimulationSystem : JobComponentSystem
 	protected override void OnStartRunning()
 	{
 		patterns = patternsQuery.ToComponentDataArray<PatternInfo>(Allocator.Persistent);
+		patterns.Sort(new PatternSortByPriority());
+		
 		patternMatchRequest = new NativeHashMap<int, float2>(10, Allocator.Persistent);
 		GetLevelInfo();
 	}
@@ -169,7 +171,6 @@ public class SimulationSystem : JobComponentSystem
 		}
 	}
 
-	[RequireComponentTag(typeof(Prefab))]
 	struct PatternMatching : IJob
 	{
 		[ReadOnly]

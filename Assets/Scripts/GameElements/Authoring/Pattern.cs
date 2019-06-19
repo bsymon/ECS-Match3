@@ -30,14 +30,17 @@ public class Pattern : MonoBehaviour, IConvertGameObjectToEntity
 	public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
 	{
 		var patternBuffer = dstManager.AddBuffer<Runtime.Pattern>(entity);
+		var blocksCount   = 0;
 
 		for(var i = 0; i < patternHeight * patternWidth; ++i)
 		{
+			blocksCount += pattern[i] ? 1 : 0;
 			patternBuffer.Add(pattern[i]);
 		}
 
 		dstManager.AddComponentData(entity, new Runtime.PatternInfo() {
 			size   = new float2(patternWidth, patternHeight),
+			blocks = blocksCount,
 			entity = entity
 		});
 	}
