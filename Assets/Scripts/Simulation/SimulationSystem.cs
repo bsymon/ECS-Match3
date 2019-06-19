@@ -81,7 +81,8 @@ public class SimulationSystem : JobComponentSystem
 			level     = EntityManager.GetBuffer<Level>(levelEntity),
 			levelInfo = level,
 			cmdBuff   = jobCmdBuffer,
-			patternMatchRequest = patternMatchRequest.ToConcurrent()
+			patternMatchRequest = patternMatchRequest.ToConcurrent(),
+			viewCmdStack = viewCmdStack.ToConcurrent()
 		};
 
 		var patternMatching = new PatternMatching() {
@@ -136,6 +137,8 @@ public class SimulationSystem : JobComponentSystem
 
 		public EntityCommandBuffer.Concurrent cmdBuff;
 
+		public ViewCommandStack.Concurrent viewCmdStack;
+
 		// -- //
 
 		public void Execute(Entity entity, int entityIndex, ref SwapQuery query)
@@ -155,6 +158,9 @@ public class SimulationSystem : JobComponentSystem
 				level[blockBIndex] = blockAInfo;
 
 				patternMatchRequest.TryAdd(entityIndex, query.gridPosB);
+
+				viewCmdStack.AddCommand(entityIndex, blockAInfo.entity, new SwapCommand() { destination = query.gridPosB });
+				viewCmdStack.AddCommand(entityIndex, blockBInfo.entity, new SwapCommand() { destination = query.gridPosA });
 
 				Debug.Log("New pattern matching query");
 			}
@@ -334,10 +340,10 @@ public class SimulationSystem : JobComponentSystem
 			if(block.IsEmpty)
 				return;
 
-			block.ShouldDelete = true;
-			level[blockId] = block;
+			level[blockId] = Level.Empty;
 
-			viewCmdStack.AddCommand<HighligthCommand>(index, block.entity, new HighligthCommand(duration: 0.5f));
+			viewCmdStack.AddCommand(index, block.entity, new HighligthCommand(duration: 0.5f));
+			viewCmdStack.AddCommand<DeleteCommand>(index, block.entity);
 		}
 	}
 }
