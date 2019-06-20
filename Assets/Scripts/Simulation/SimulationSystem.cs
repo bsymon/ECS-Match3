@@ -26,8 +26,8 @@ public class SimulationSystem : JobComponentSystem
 	private Entity levelEntity;
 
 	private EntityQuery swapQueriesQuery;
-	private NativeHashMap<int, PatternMatchRequest> patternMatchRequest;
-	private NativeHashMap<int, PatternMatchRequest> unswap;
+	private NativeHashMap<int, float2> patternMatchRequest;
+	private NativeHashMap<int, bool> unswap;
 
 	private EntityQuery patternsQuery;
 	private NativeArray<PatternInfo> patterns;
@@ -60,8 +60,8 @@ public class SimulationSystem : JobComponentSystem
 		patterns = patternsQuery.ToComponentDataArray<PatternInfo>(Allocator.Persistent);
 		patterns.Sort(new PatternSortByPriority());
 
-		patternMatchRequest = new NativeHashMap<int, PatternMatchRequest>(10, Allocator.Persistent);
-		unswap              = new NativeHashMap<int, PatternMatchRequest>(10, Allocator.Persistent);
+		patternMatchRequest = new NativeHashMap<int, float2>(10, Allocator.Persistent);
+		unswap              = new NativeHashMap<int, bool>(10, Allocator.Persistent);
 		GetLevelInfo();
 	}
 
@@ -139,15 +139,6 @@ public class SimulationSystem : JobComponentSystem
 		temp_levelEntity.Dispose();
 	}
 
-	// DATA
-
-	struct PatternMatchRequest
-	{
-		public float2 position;
-		public bool match;
-		public int2 toUnswap;
-	}
-
 	// JOBS
 
 	struct SwapTest : IJobForEachWithEntity<SwapQuery>
@@ -158,7 +149,7 @@ public class SimulationSystem : JobComponentSystem
 		[ReadOnly]
 		public LevelInfo levelInfo;
 
-		public NativeHashMap<int, PatternMatchRequest>.Concurrent patternMatchRequest;
+		public NativeHashMap<int, float2>.Concurrent patternMatchRequest;
 
 		public EntityCommandBuffer.Concurrent cmdBuff;
 
@@ -182,12 +173,7 @@ public class SimulationSystem : JobComponentSystem
 				level[blockAIndex] = blockBInfo;
 				level[blockBIndex] = blockAInfo;
 
-				var request = new PatternMatchRequest() {
-					position = query.gridPosB,
-					toUnswap = new int2(blockAIndex, blockBIndex)
-				};
-
-				patternMatchRequest.TryAdd(entityIndex, request);
+				patternMatchRequest.TryAdd(entityIndex, query.gridPosB);
 
 				Debug.Log("New pattern matching query");
 			}
@@ -197,7 +183,7 @@ public class SimulationSystem : JobComponentSystem
 	struct PatternMatching : IJob
 	{
 		[ReadOnly]
-		public NativeHashMap<int, PatternMatchRequest> patternMatchRequest;
+		public NativeHashMap<int, float2> patternMatchRequest;
 
 		[ReadOnly]
 		public BufferFromEntity<Pattern> patternsBufferLookup;
@@ -213,7 +199,7 @@ public class SimulationSystem : JobComponentSystem
 
 		public NativeArray<int> blocksToDelete;
 
-		public NativeHashMap<int, PatternMatchRequest>.Concurrent unswap;
+		public NativeHashMap<int, bool>.Concurrent unswap;
 
 		// -- //
 
@@ -232,17 +218,18 @@ public class SimulationSystem : JobComponentSystem
 			for(int i = 0; i < requests.Length; ++i)
 			{
 				var request = requests[i];
+				var match   = false;
 
 				for(int j = 0; j < patternsInfo.Length; ++j)
 				{
 					var patternInfo   = patternsInfo[j];
 					var pattern       = patternsBufferLookup[patternInfo.entity];
 					var matchedBlocks = new NativeArray<int>(pattern.Length, Allocator.Temp);
-					var match         = Match(pattern, ref patternInfo, request, matchedBlocks);
+
+					match = Match(pattern, ref patternInfo, request, matchedBlocks);
 
 					if(match)
 					{
-						request.match = true;
 						AddMatchedBlockToDelete(matchedBlocks);
 					}
 
@@ -252,9 +239,9 @@ public class SimulationSystem : JobComponentSystem
 						break;
 				}
 
-				if(!request.match)
+				if(!match)
 				{
-					unswap.TryAdd(request.position.GetHashCode(), request);
+					unswap.TryAdd(request.GetHashCode(), true);
 				}
 			}
 
@@ -274,10 +261,10 @@ public class SimulationSystem : JobComponentSystem
 		}
 
 		private bool Match(DynamicBuffer<Pattern> pattern, ref PatternInfo patternInfo,
-				PatternMatchRequest request, NativeArray<int> matchedBlocks)
+				float2 gridPos, NativeArray<int> matchedBlocks)
 		{
 			var level        = levelBufferLookup[levelInfo.entity];
-			var blockToMatch = level[MathHelpers.To1D(request.position, levelInfo.size.x)];
+			var blockToMatch = level[MathHelpers.To1D(gridPos, levelInfo.size.x)];
 			var height       = patternInfo.size.y;
 			var width        = patternInfo.size.x;
 			var matchAll     = true;
@@ -294,7 +281,7 @@ public class SimulationSystem : JobComponentSystem
 					blockMatched = 0;
 
 					var patternOffset = new int2(patternX, patternY);
-					var levelStart    = request.position - patternOffset;
+					var levelStart    = gridPos - patternOffset;
 
 					for(int levelY = 0; levelY < height; ++levelY)
 					{
@@ -392,7 +379,7 @@ public class SimulationSystem : JobComponentSystem
 		public LevelInfo levelInfo;
 
 		[ReadOnly]
-		public NativeHashMap<int, PatternMatchRequest> unswap;
+		public NativeHashMap<int, bool> unswap;
 
 		public ViewCommandStack.Concurrent viewCmdStack;
 		public EntityCommandBuffer.Concurrent cmdBuffer;
