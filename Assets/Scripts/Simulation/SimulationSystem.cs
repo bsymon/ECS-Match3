@@ -117,10 +117,17 @@ public class SimulationSystem : JobComponentSystem
 			viewCmdStack = viewCmdStack.ToConcurrent()
 		};
 
+		var moveDownBlocks = new MoveDownBlocks() {
+			levelInfo         = level,
+			levelBufferLookup = GetBufferFromEntity<Level>(isReadOnly: false),
+			viewCmdStack      = viewCmdStack.ToConcurrent()
+		};
+
 		jobs = swapTestJob.Schedule(this, jobs);
 		jobs = patternMatching.Schedule(jobs);
 		jobs = performSwap.Schedule(this, jobs);
 		jobs = deleteBlocks.Schedule(blocksToDelete.Length, 2, jobs);
+		jobs = moveDownBlocks.Schedule((int) level.size.x, 2, jobs);
 
 		return jobs;
 	}
@@ -352,12 +359,12 @@ public class SimulationSystem : JobComponentSystem
 
 		public void Execute(int index)
 		{
-			var level   = levelBufferLookup[levelInfo.entity];
 			var blockId = blocksToDelete[index] - 1;
 
 			if(blockId < 0)
 				return;
 
+			var level = levelBufferLookup[levelInfo.entity];
 			var block = level[blockId];
 
 			if(block.IsEmpty)
@@ -405,6 +412,52 @@ public class SimulationSystem : JobComponentSystem
 			}
 
 			cmdBuffer.DestroyEntity(index, entity);
+		}
+	}
+
+	/** Loop the level on X, and each Execute loop on Y */
+	struct MoveDownBlocks : IJobParallelFor
+	{
+		[ReadOnly]
+		public LevelInfo levelInfo;
+
+		[ReadOnly]
+		public BufferFromEntity<Level> levelBufferLookup;
+
+		public ViewCommandStack.Concurrent viewCmdStack;
+		
+		// -- //
+		
+		public void Execute(int index)
+		{
+			var level   = levelBufferLookup[levelInfo.entity];
+
+			if(level.Length == 0)
+				return;
+			
+			var x       = index;
+			var lowestY = -1;
+
+			for(int y = 0; y < levelInfo.size.y; ++y)
+			{
+				var pos2D     = new float2(x, y);
+				var pos1D     = MathHelpers.To1D(pos2D, levelInfo.size.x);
+				var blockInfo = level[pos1D];
+
+				if(blockInfo.IsEmpty && (pos1D <= lowestY || lowestY == -1))
+				{
+					lowestY = pos1D;
+					continue;
+				}
+				else if(lowestY > -1)
+				{
+					level[lowestY] = blockInfo;
+					level[pos1D]   = Level.Empty; // TODO should not set to null, the block could reference the same entity :)
+					lowestY        = lowestY + (int) levelInfo.size.x;
+
+					viewCmdStack.AddCommand(index, blockInfo.entity, new SwapCommand() { destination = pos2D });
+				}
+			}
 		}
 	}
 }
