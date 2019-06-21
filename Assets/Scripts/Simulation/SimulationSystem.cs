@@ -418,6 +418,9 @@ public class SimulationSystem : JobComponentSystem
 	/** Loop the level on X, and each Execute loop on Y */
 	struct MoveDownBlocks : IJobParallelFor
 	{
+		// NOTE (Benjamin) this job is always executed
+		//					should only be triggered when the level actually change
+		
 		[ReadOnly]
 		public LevelInfo levelInfo;
 
@@ -444,18 +447,19 @@ public class SimulationSystem : JobComponentSystem
 				var pos1D     = MathHelpers.To1D(pos2D, levelInfo.size.x);
 				var blockInfo = level[pos1D];
 
-				if(blockInfo.IsEmpty && (pos1D <= lowestY || lowestY == -1))
+				if(blockInfo.IsEmpty && lowestY == -1)
 				{
 					lowestY = pos1D;
-					continue;
 				}
-				else if(lowestY > -1)
+
+				if(!blockInfo.IsEmpty && lowestY > -1)
 				{
+					var blockDest  = MathHelpers.To2D(lowestY, (int) levelInfo.size.x);
 					level[lowestY] = blockInfo;
-					level[pos1D]   = Level.Empty; // TODO should not set to null, the block could reference the same entity :)
+					level[pos1D]   = Level.Empty;
 					lowestY        = lowestY + (int) levelInfo.size.x;
 
-					viewCmdStack.AddCommand(index, blockInfo.entity, new SwapCommand() { destination = pos2D });
+					viewCmdStack.AddCommand(index, blockInfo.entity, new SwapCommand() { destination = blockDest });
 				}
 			}
 		}
