@@ -223,9 +223,10 @@ public class SimulationSystem : JobComponentSystem
 				return;
 
 			blockMatched = 0;
-			var requests = new NativeArray<int2>(patternMatchRequest.Count, Allocator.Temp);
+			var patternMatchCount = patternMatchRequest.Count;
+			var requests = new NativeArray<int2>(patternMatchCount, Allocator.Temp);
 
-			for(int i = 0; i < patternMatchRequest.Count; ++i)
+			for(int i = 0; i < patternMatchCount; ++i)
 			{
 				requests[i] = patternMatchRequest.Dequeue();
 			}
@@ -450,6 +451,8 @@ public class SimulationSystem : JobComponentSystem
 
 			var x       = index;
 			var lowestY = -1;
+			var willMove      = false;
+			var shouldMatchAt = int2.zero;
 
 			for(int y = 0; y < levelInfo.size.y; ++y)
 			{
@@ -459,8 +462,8 @@ public class SimulationSystem : JobComponentSystem
 
 				if(blockInfo.IsEmpty && lowestY == -1)
 				{
-					lowestY = pos1D;
-					patternMatchRequest.Enqueue(pos2D);
+					lowestY       = pos1D;
+					shouldMatchAt = pos2D;
 				}
 
 				if(!blockInfo.IsEmpty && lowestY > -1)
@@ -469,10 +472,14 @@ public class SimulationSystem : JobComponentSystem
 					level[lowestY] = blockInfo;
 					level[pos1D]   = Level.Empty;
 					lowestY        = lowestY + levelInfo.size.x;
+					willMove       = true;
 
 					viewCmdStack.AddCommand(index, blockInfo.entity, new MoveDownCommand(destination: blockDest, duration: 2f));
 				}
 			}
+
+			if(willMove)
+				patternMatchRequest.Enqueue(shouldMatchAt);
 		}
 	}
 }
