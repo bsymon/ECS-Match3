@@ -1,14 +1,13 @@
-﻿using UnityEngine;
-using Unity.Mathematics;
+﻿using Unity.Mathematics;
 
 namespace Game
 {
 
 public static class MathHelpers
 {
-	public static int To1D(float2 pos, float width)
+	public static int To1D(int2 pos, int width)
 	{
-		return (int) (pos.x + width * pos.y);
+		return pos.x + width * pos.y;
 	}
 
 	public static int2 To2D(int pos, int with)

@@ -1,11 +1,8 @@
 ﻿using UnityEngine;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.Transforms;
-using static Unity.Mathematics.math;
 using Game.GameElements.Runtime;
 using Game.Command;
 using Game.View;
@@ -26,7 +23,7 @@ public class SimulationSystem : JobComponentSystem
 	private Entity levelEntity;
 
 	private EntityQuery swapQueriesQuery;
-	private NativeHashMap<int, float2> patternMatchRequest;
+	private NativeHashMap<int, int2> patternMatchRequest;
 	private NativeHashMap<int, bool> unswap;
 
 	private EntityQuery patternsQuery;
@@ -60,7 +57,7 @@ public class SimulationSystem : JobComponentSystem
 		patterns = patternsQuery.ToComponentDataArray<PatternInfo>(Allocator.Persistent);
 		patterns.Sort(new PatternSortByPriority());
 
-		patternMatchRequest = new NativeHashMap<int, float2>(10, Allocator.Persistent);
+		patternMatchRequest = new NativeHashMap<int, int2>(10, Allocator.Persistent);
 		unswap              = new NativeHashMap<int, bool>(10, Allocator.Persistent);
 		GetLevelInfo();
 	}
@@ -127,7 +124,7 @@ public class SimulationSystem : JobComponentSystem
 		jobs = patternMatching.Schedule(jobs);
 		jobs = performSwap.Schedule(this, jobs);
 		jobs = deleteBlocks.Schedule(blocksToDelete.Length, 2, jobs);
-		jobs = moveDownBlocks.Schedule((int) level.size.x, 2, jobs);
+		jobs = moveDownBlocks.Schedule(level.size.x, 2, jobs);
 
 		return jobs;
 	}
@@ -156,7 +153,7 @@ public class SimulationSystem : JobComponentSystem
 		[ReadOnly]
 		public LevelInfo levelInfo;
 
-		public NativeHashMap<int, float2>.Concurrent patternMatchRequest;
+		public NativeHashMap<int, int2>.Concurrent patternMatchRequest;
 
 		public EntityCommandBuffer.Concurrent cmdBuff;
 
@@ -190,7 +187,7 @@ public class SimulationSystem : JobComponentSystem
 	struct PatternMatching : IJob
 	{
 		[ReadOnly]
-		public NativeHashMap<int, float2> patternMatchRequest;
+		public NativeHashMap<int, int2> patternMatchRequest;
 
 		[ReadOnly]
 		public BufferFromEntity<Pattern> patternsBufferLookup;
@@ -236,9 +233,7 @@ public class SimulationSystem : JobComponentSystem
 					match = Match(pattern, ref patternInfo, request, matchedBlocks);
 
 					if(match)
-					{
 						AddMatchedBlockToDelete(matchedBlocks);
-					}
 
 					matchedBlocks.Dispose();
 
@@ -268,7 +263,7 @@ public class SimulationSystem : JobComponentSystem
 		}
 
 		private bool Match(DynamicBuffer<Pattern> pattern, ref PatternInfo patternInfo,
-				float2 gridPos, NativeArray<int> matchedBlocks)
+				int2 gridPos, NativeArray<int> matchedBlocks)
 		{
 			var level        = levelBufferLookup[levelInfo.entity];
 			var blockToMatch = level[MathHelpers.To1D(gridPos, levelInfo.size.x)];
@@ -307,7 +302,7 @@ public class SimulationSystem : JobComponentSystem
 								break;
 							}
 
-							var block    = level[levelBufferId];
+							var block       = level[levelBufferId];
 							var shouldMatch = pattern[MathHelpers.To1D(localPos, width)].match;
 							var matchThis   = !shouldMatch || block.blockId == blockToMatch.blockId;
 
@@ -443,7 +438,7 @@ public class SimulationSystem : JobComponentSystem
 
 			for(int y = 0; y < levelInfo.size.y; ++y)
 			{
-				var pos2D     = new float2(x, y);
+				var pos2D     = new int2(x, y);
 				var pos1D     = MathHelpers.To1D(pos2D, levelInfo.size.x);
 				var blockInfo = level[pos1D];
 
@@ -454,10 +449,10 @@ public class SimulationSystem : JobComponentSystem
 
 				if(!blockInfo.IsEmpty && lowestY > -1)
 				{
-					var blockDest  = MathHelpers.To2D(lowestY, (int) levelInfo.size.x);
+					var blockDest  = MathHelpers.To2D(lowestY, levelInfo.size.x);
 					level[lowestY] = blockInfo;
 					level[pos1D]   = Level.Empty;
-					lowestY        = lowestY + (int) levelInfo.size.x;
+					lowestY        = lowestY + levelInfo.size.x;
 
 					viewCmdStack.AddCommand(index, blockInfo.entity, new MoveDownCommand(destination: blockDest, duration: 2f));
 				}

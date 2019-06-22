@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -22,7 +20,7 @@ public class SimulationBridge : MonoBehaviour
 
 	// INTERFACES
 
-	public void CreateSwapQuery(float2 gridPosA, float2 gridPosB)
+	public void CreateSwapQuery(int2 gridPosA, int2 gridPosB)
 	{
 		var entity = entityManager.CreateEntity();
 		var query  = new SwapQuery() {

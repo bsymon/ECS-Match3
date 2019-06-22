@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -100,7 +98,7 @@ public class InputHandler : MonoBehaviour
 				var newPlaceholder = Instantiate(inputPlaceholderPrefab);
 				var worldPos       = new float3(x, y, 0) * 2f; // TODO (Benjamin) param for gridSize
 
-				newPlaceholder.GridPosition       = new float2(x, y);
+				newPlaceholder.GridPosition       = new int2(x, y);
 				newPlaceholder.transform.position = worldPos;
 				newPlaceholder.transform.parent   = transform;
 			}

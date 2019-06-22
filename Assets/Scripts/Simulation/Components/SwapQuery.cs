@@ -9,8 +9,8 @@ namespace Game.Simulation
 [Serializable]
 public struct SwapQuery : IComponentData
 {
-	public float2 gridPosA;
-	public float2 gridPosB;
+	public int2 gridPosA;
+	public int2 gridPosB;
 }
 
 }

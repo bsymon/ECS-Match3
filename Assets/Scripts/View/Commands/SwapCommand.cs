@@ -15,7 +15,7 @@ public struct SwapCommand : ICommand
 
 	// -- //
 
-	public float2 destination;
+	public int2 destination;
 }
 
 }

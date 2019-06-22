@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Mathematics;
 
 namespace Game.GameElements.Runtime
@@ -9,7 +8,7 @@ namespace Game.GameElements.Runtime
 public struct LevelInfo : IComponentData
 {
 
-	public float2 size;
+	public int2 size;
 	public Entity entity;
 
 }

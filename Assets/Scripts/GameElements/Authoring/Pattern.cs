@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -15,6 +13,8 @@ public class Pattern : MonoBehaviour, IConvertGameObjectToEntity
 	//					Use instead a ScriptableObject and maybe store it as BlobAssetReference ...
 
 	// INSPECTOR
+
+	// TODO add int2 patternSize
 
 	[SerializeField]
 	private int patternWidth = 0;
@@ -39,7 +39,7 @@ public class Pattern : MonoBehaviour, IConvertGameObjectToEntity
 		}
 
 		dstManager.AddComponentData(entity, new Runtime.PatternInfo() {
-			size   = new float2(patternWidth, patternHeight),
+			size   = new int2(patternWidth, patternHeight),
 			blocks = blocksCount,
 			entity = entity
 		});

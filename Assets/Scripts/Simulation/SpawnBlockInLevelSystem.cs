@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using Unity.Entities;
+﻿using Unity.Entities;
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -89,8 +88,6 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 		{
 			for(var x = 0; x < levelInfo.size.x; ++x)
 			{
-				var i = x + levelInfo.size.x * y;
-
 				levelBuffer.Add(Level.Empty);
 			}
 		}
@@ -104,7 +101,7 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 		{
 			for(var x = 0; x < levelInfo.size.x; ++x)
 			{
-				var i = (int) (x + levelInfo.size.x * y);
+				var i = x + levelInfo.size.x * y;
 				var levelBuffer = EntityManager.GetBuffer<Level>(levelEntity);
 				var currentBlock = levelBuffer[i];
 
@@ -116,10 +113,10 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 				var block       = EntityManager.GetComponentData<Block>(blockEntity);
 				var translation = EntityManager.GetComponentData<Translation>(blockEntity);
 
-				block.gridPosition   = new float2(x, y);
+				block.gridPosition   = new int2(x, y);
 				currentBlock.blockId = block.blockId;
 				currentBlock.entity  = blockEntity;
-				translation.Value    = new float3(block.gridPosition * 2f, 0);
+				translation.Value    = new float3(block.gridPosition * 2, 0);
 
 				levelBuffer = EntityManager.GetBuffer<Level>(levelEntity); // NOTE (Benjamin) get the buffer again, because it is deallocated after any method call of EntityManager ...
 

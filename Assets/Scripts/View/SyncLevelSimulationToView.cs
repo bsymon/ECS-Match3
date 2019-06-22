@@ -72,7 +72,7 @@ public class SyncLevelSimulationToView : JobComponentSystem
 		public void Execute(Entity entity, int index, ref Block block,
 				ref SwapCommand command, ref Translation translation)
 		{
-			var worldPos       = new float3(command.destination * 2f, 0);
+			var worldPos       = new float3(command.destination * 2, 0);
 			block.gridPosition = command.destination;
 			translation.Value  = worldPos;
 			cmdBuffer.RemoveComponent<SwapCommand>(index, entity);
@@ -94,7 +94,7 @@ public class SyncLevelSimulationToView : JobComponentSystem
 			if(!command.startPosSet)
 				command.startPos = translation.Value;
 
-			var worldPos = new float3(command.destination * 2f, 0);
+			var worldPos = new float3(command.destination * 2, 0);
 			var progress = math.unlerp(command.duration, 0, command.remain);
 			var position = math.lerp(command.startPos, worldPos, progress);
 

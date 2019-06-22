@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -13,11 +11,11 @@ public class Level : MonoBehaviour, IConvertGameObjectToEntity
 	// INSPECTOR
 
 	[SerializeField]
-	private float2 levelSize;
+	private int2 levelSize;
 
 	// ACCESSORS
 
-	public float2 LevelSize
+	public int2 LevelSize
 	{
 		get { return levelSize; }
 	}
@@ -35,8 +33,8 @@ public class Level : MonoBehaviour, IConvertGameObjectToEntity
 
 		var levelBuffer = dstManager.AddBuffer<Runtime.Level>(entity);
 		var levelInfo   = new Runtime.LevelInfo() {
-			size = levelSize,
-			entity    = entity
+			size   = levelSize,
+			entity = entity
 		};
 
 		dstManager.AddComponentData(entity, levelInfo);

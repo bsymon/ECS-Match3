@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using Unity.Mathematics;
+﻿using Unity.Mathematics;
 using Game.Command;
 
 namespace Game.View
@@ -15,7 +14,7 @@ public struct MoveDownCommand : ICommand
 
 	// -- //
 
-	public float2 destination;
+	public int2 destination;
 	public float duration;
 	public float remain;
 	public float3 startPos;
@@ -23,7 +22,7 @@ public struct MoveDownCommand : ICommand
 
 	// -- //
 
-	public MoveDownCommand(float2 destination, float duration)
+	public MoveDownCommand(int2 destination, float duration)
 	{
 		this.destination = destination;
 		this.duration    = duration;

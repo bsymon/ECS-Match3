@@ -8,11 +8,11 @@ namespace Game.GameElements
 
 public class InputPlaceholder : MonoBehaviour
 {
-	
+
 	// ACCESSORS
 
-	public float2 GridPosition { get; set; }
-	
+	public int2 GridPosition { get; set; }
+
 }
 
 }
