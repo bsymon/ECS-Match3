@@ -46,6 +46,4 @@ MonoBehaviour:
   size:
     x: 1
     y: 3
-  patternWidth: 1
-  patternHeight: 3
   pattern: 010101

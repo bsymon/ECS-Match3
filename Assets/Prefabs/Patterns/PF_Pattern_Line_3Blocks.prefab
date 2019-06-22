@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4782007989438335873}
   - component: {fileID: 6913187847794503511}
   m_Layer: 0
-  m_Name: PF_Pattern_3x3_Corner
+  m_Name: PF_Pattern_Line_3Blocks
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45,5 +45,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   size:
     x: 3
-    y: 3
-  pattern: 010000010000010101
+    y: 1
+  pattern: 010101

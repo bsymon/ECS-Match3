@@ -308,17 +308,18 @@ public class SimulationSystem : JobComponentSystem
 							var localPos = new int2(levelX, levelY);
 							var blockPos = levelStart + localPos;
 
-							var levelBufferId = MathHelpers.To1D(blockPos, levelInfo.size.x);
-
-							if(levelBufferId < 0 || levelBufferId >= level.Length)
+							if(blockPos.x < 0 || blockPos.x >= levelInfo.size.x
+								|| blockPos.y < 0 || blockPos.y >= levelInfo.size.y
+							)
 							{
 								matchAll = false;
 								break;
 							}
 
-							var block       = level[levelBufferId];
-							var shouldMatch = pattern[MathHelpers.To1D(localPos, width)].match;
-							var matchThis   = !shouldMatch || block.blockId == blockToMatch.blockId;
+							var levelBufferId = MathHelpers.To1D(blockPos, levelInfo.size.x);
+							var block         = level[levelBufferId];
+							var shouldMatch   = pattern[MathHelpers.To1D(localPos, width)].match;
+							var matchThis     = !shouldMatch || block.blockId == blockToMatch.blockId;
 
 							matchAll = matchAll && matchThis;
 
