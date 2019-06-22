@@ -23,7 +23,7 @@ public class SimulationSystem : JobComponentSystem
 	private Entity levelEntity;
 
 	private EntityQuery swapQueriesQuery;
-	private NativeHashMap<int, int2> patternMatchRequest;
+	private NativeQueue<int2> patternMatchRequest;
 	private NativeHashMap<int, bool> unswap;
 
 	private EntityQuery patternsQuery;
@@ -57,7 +57,7 @@ public class SimulationSystem : JobComponentSystem
 		patterns = patternsQuery.ToComponentDataArray<PatternInfo>(Allocator.Persistent);
 		patterns.Sort(new PatternSortByPriority());
 
-		patternMatchRequest = new NativeHashMap<int, int2>(10, Allocator.Persistent);
+		patternMatchRequest = new NativeQueue<int2>(Allocator.Persistent);
 		unswap              = new NativeHashMap<int, bool>(10, Allocator.Persistent);
 		GetLevelInfo();
 	}
@@ -71,13 +71,18 @@ public class SimulationSystem : JobComponentSystem
 
 	protected override JobHandle OnUpdate(JobHandle jobs)
 	{
+		if(viewCmdStack.Count > 0)
+		{
+			// Debug.Log("View has commands");
+			return jobs;
+		}
+
 		if(patternMatchRequest.IsCreated)
 		{
-			patternMatchRequest.Clear();
 			unswap.Clear();
 		}
 
-		var blocksToDelete = new NativeArray<int>(20, Allocator.TempJob);
+		var blocksToDelete = new NativeArray<int>(100, Allocator.TempJob);
 		var jobCmdBuffer   = cmdBuffer.CreateCommandBuffer().ToConcurrent();
 
 		var swapTestJob = new SwapTest() {
@@ -117,7 +122,8 @@ public class SimulationSystem : JobComponentSystem
 		var moveDownBlocks = new MoveDownBlocks() {
 			levelInfo         = level,
 			levelBufferLookup = GetBufferFromEntity<Level>(isReadOnly: false),
-			viewCmdStack      = viewCmdStack.ToConcurrent()
+			viewCmdStack      = viewCmdStack.ToConcurrent(),
+			patternMatchRequest = patternMatchRequest.ToConcurrent()
 		};
 
 		jobs = swapTestJob.Schedule(this, jobs);
@@ -153,7 +159,7 @@ public class SimulationSystem : JobComponentSystem
 		[ReadOnly]
 		public LevelInfo levelInfo;
 
-		public NativeHashMap<int, int2>.Concurrent patternMatchRequest;
+		public NativeQueue<int2>.Concurrent patternMatchRequest;
 
 		public EntityCommandBuffer.Concurrent cmdBuff;
 
@@ -177,17 +183,17 @@ public class SimulationSystem : JobComponentSystem
 				level[blockAIndex] = blockBInfo;
 				level[blockBIndex] = blockAInfo;
 
-				patternMatchRequest.TryAdd(entityIndex, query.gridPosB);
+				patternMatchRequest.Enqueue(query.gridPosA);
+				patternMatchRequest.Enqueue(query.gridPosB);
 
-				Debug.Log("New pattern matching query");
+				// Debug.Log("New pattern matching query");
 			}
 		}
 	}
 
 	struct PatternMatching : IJob
 	{
-		[ReadOnly]
-		public NativeHashMap<int, int2> patternMatchRequest;
+		public NativeQueue<int2> patternMatchRequest;
 
 		[ReadOnly]
 		public BufferFromEntity<Pattern> patternsBufferLookup;
@@ -213,11 +219,16 @@ public class SimulationSystem : JobComponentSystem
 
 		public void Execute()
 		{
-			if(patternMatchRequest.Length == 0)
+			if(patternMatchRequest.Count == 0)
 				return;
 
 			blockMatched = 0;
-			var requests = patternMatchRequest.GetValueArray(Allocator.Temp);
+			var requests = new NativeArray<int2>(patternMatchRequest.Count, Allocator.Temp);
+
+			for(int i = 0; i < patternMatchRequest.Count; ++i)
+			{
+				requests[i] = patternMatchRequest.Dequeue();
+			}
 
 			for(int i = 0; i < requests.Length; ++i)
 			{
@@ -260,6 +271,8 @@ public class SimulationSystem : JobComponentSystem
 			{
 				blocksToDelete[i] = blocks[j];
 			}
+
+			blockMatched += blocks.Length;
 		}
 
 		private bool Match(DynamicBuffer<Pattern> pattern, ref PatternInfo patternInfo,
@@ -314,7 +327,7 @@ public class SimulationSystem : JobComponentSystem
 								blockMatched++;
 							}
 
-							Debug.Log($"Pos : {blockPos} | Local : {localPos} | Should match ? {shouldMatch} | Match {blockToMatch.blockId} with {block.blockId} | Match this ? {matchThis} | All ? {matchAll}");
+							// Debug.Log($"Pos : {blockPos} | Local : {localPos} | Should match ? {shouldMatch} | Match {blockToMatch.blockId} with {block.blockId} | Match this ? {matchThis} | All ? {matchAll}");
 
 							// TODO break early if no match
 						}
@@ -328,7 +341,7 @@ public class SimulationSystem : JobComponentSystem
 					break;
 			}
 
-			Debug.Log($"Match ? {matchAll}");
+			// Debug.Log($"Match ? {matchAll}");
 
 			return matchAll;
 		}
@@ -422,6 +435,8 @@ public class SimulationSystem : JobComponentSystem
 		[ReadOnly]
 		public BufferFromEntity<Level> levelBufferLookup;
 
+		public NativeQueue<int2>.Concurrent patternMatchRequest;
+
 		public ViewCommandStack.Concurrent viewCmdStack;
 
 		// -- //
@@ -445,6 +460,7 @@ public class SimulationSystem : JobComponentSystem
 				if(blockInfo.IsEmpty && lowestY == -1)
 				{
 					lowestY = pos1D;
+					patternMatchRequest.Enqueue(pos2D);
 				}
 
 				if(!blockInfo.IsEmpty && lowestY > -1)

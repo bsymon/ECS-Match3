@@ -38,6 +38,23 @@ public abstract class CommandStack : EntityCommandBufferSystem
 	private Dictionary<int, int> cachedCommandsPrio;	// Key : CommandType hash - Value : priority
 	private Dictionary<int, int> cachedCommandsIndex;	// Key : CommandType hash - Value : index in "queries"
 
+	// ACCESSORS
+
+	public int Count
+	{
+		get
+		{
+			var total = 0;
+
+			foreach(var query in queries)
+			{
+				total += query.CalculateLength();
+			}
+
+			return total;
+		}
+	}
+
 	// PRIVATES METHODS
 
 	private void CreateCommandsQueries()
@@ -130,8 +147,6 @@ public abstract class CommandStack : EntityCommandBufferSystem
 			cmdBuffer = cmdBuffer.ToConcurrent()
 		};
 	}
-
-	// TODO (Benjamin) method to check if there is highest priority commands than a given one
 
 	public bool HasCommand<T>() where T : struct, ICommand
 	{

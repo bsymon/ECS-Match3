@@ -84,8 +84,6 @@ public class InputHandler : MonoBehaviour
 
 			selectionA = null;
 			selectionB = null;
-
-			Debug.Log("SELECT 2 BLOCKS");
 		}
 	}
 
