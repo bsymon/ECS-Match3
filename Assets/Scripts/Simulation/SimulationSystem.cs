@@ -420,7 +420,7 @@ public class SimulationSystem : JobComponentSystem
 	{
 		// NOTE (Benjamin) this job is always executed
 		//					should only be triggered when the level actually change
-		
+
 		[ReadOnly]
 		public LevelInfo levelInfo;
 
@@ -428,16 +428,16 @@ public class SimulationSystem : JobComponentSystem
 		public BufferFromEntity<Level> levelBufferLookup;
 
 		public ViewCommandStack.Concurrent viewCmdStack;
-		
+
 		// -- //
-		
+
 		public void Execute(int index)
 		{
-			var level   = levelBufferLookup[levelInfo.entity];
+			var level = levelBufferLookup[levelInfo.entity];
 
 			if(level.Length == 0)
 				return;
-			
+
 			var x       = index;
 			var lowestY = -1;
 
@@ -459,7 +459,7 @@ public class SimulationSystem : JobComponentSystem
 					level[pos1D]   = Level.Empty;
 					lowestY        = lowestY + (int) levelInfo.size.x;
 
-					viewCmdStack.AddCommand(index, blockInfo.entity, new SwapCommand() { destination = blockDest });
+					viewCmdStack.AddCommand(index, blockInfo.entity, new MoveDownCommand(destination: blockDest, duration: 2f));
 				}
 			}
 		}

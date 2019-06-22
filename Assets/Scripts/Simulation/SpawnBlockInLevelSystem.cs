@@ -2,6 +2,7 @@
 using Unity.Entities;
 using Unity.Collections;
 using Unity.Mathematics;
+using Unity.Transforms;
 using Game.GameElements.Runtime;
 
 namespace Game.Simulation
@@ -113,16 +114,19 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 				var blockPrefab = blockPrefabs[UnityEngine.Random.Range(0, blockPrefabs.Length)];
 				var blockEntity = EntityManager.Instantiate(blockPrefab);
 				var block       = EntityManager.GetComponentData<Block>(blockEntity);
+				var translation = EntityManager.GetComponentData<Translation>(blockEntity);
 
 				block.gridPosition   = new float2(x, y);
 				currentBlock.blockId = block.blockId;
 				currentBlock.entity  = blockEntity;
+				translation.Value    = new float3(block.gridPosition * 2f, 0);
 
 				levelBuffer = EntityManager.GetBuffer<Level>(levelEntity); // NOTE (Benjamin) get the buffer again, because it is deallocated after any method call of EntityManager ...
 
 				levelBuffer[i] = currentBlock;
 
 				EntityManager.SetComponentData(blockEntity, block);
+				EntityManager.SetComponentData(blockEntity, translation);
 			}
 		}
 	}
