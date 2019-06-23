@@ -7,7 +7,7 @@ public struct HighligthCommand : ICommand
 {
 	public int GetPriority()
 	{
-		return 0;
+		return 10;
 	}
 
 	// -- //

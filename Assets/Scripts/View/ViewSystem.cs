@@ -1,69 +1,98 @@
 ﻿using UnityEngine;
-using Unity.Collections;
 using Unity.Entities;
+using Unity.Collections;
+using Unity.Transforms;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.Transforms;
 using Game.GameElements.Runtime;
 using Game.Command;
 
 namespace Game.View
 {
 
-class SyncLevelBarrier : EntityCommandBufferSystem { }
+public class ViewCmdBuffer : EntityCommandBufferSystem { }
 
-[UpdateAfter(typeof(ViewCommandStack))]
-public class SyncLevelSimulationToView : JobComponentSystem
+public class ViewSystem : JobComponentSystem
 {
+
 	// PRIVATES FIELDS
 
-	private SyncLevelBarrier cmdBuffer;
+	private ViewCmdBuffer cmdBuffer;
 	private ViewCommandStack viewCmdStack;
 
 	// LIFE-CYCLE
 
-	protected override void OnCreateManager()
+	override protected void OnCreateManager()
 	{
-		cmdBuffer    = World.GetOrCreateSystem<SyncLevelBarrier>();
+		cmdBuffer    = World.GetOrCreateSystem<ViewCmdBuffer>();
 		viewCmdStack = CommandStack.Get<ViewCommandStack>(100);
 	}
 
-	protected override JobHandle OnUpdate(JobHandle jobs)
+	override protected JobHandle OnUpdate(JobHandle jobs)
 	{
 		var cmdBufferConcurrent = cmdBuffer.CreateCommandBuffer().ToConcurrent();
-		var syncLevel = new SyncLevel() {
+		var deltaTime = Time.deltaTime;
+
+		var swapBlocks = new SwapBlock() {
 			cmdBuffer = cmdBufferConcurrent
 		};
 
-		jobs = syncLevel.Schedule(this, jobs);
+		jobs = swapBlocks.Schedule(this, jobs);
 
-		if(!viewCmdStack.HasCommand<HighligthCommand>())
+		if(!viewCmdStack.HasCommand<SwapCommand>())
 		{
-			var moveDownBlock = new MoveDown() {
-				cmdBuffer = cmdBufferConcurrent,
-				dt        = Time.deltaTime
+			var highlight = new HighlightDeletedBlock() {
+				dt        = deltaTime,
+				cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent()
 			};
 
-			jobs = moveDownBlock.Schedule(this, jobs);
+			jobs = highlight.Schedule(this, jobs);
 		}
 
 		if(!viewCmdStack.HasCommand<HighligthCommand>())
 		{
-			var deleteBlock = new DeleteBlock() {
-				cmdBuffer = cmdBufferConcurrent
+			var moveDownBlock = new MoveDown() {
+				cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent(),
+				dt        = deltaTime
 			};
 
-			jobs = deleteBlock.Schedule(this, jobs);
+			var moveDownHandle = moveDownBlock.Schedule(this, jobs);
+
+			var deleteBlock = new DeleteBlock() {
+				cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent()
+			};
+
+			var deleteHandle = deleteBlock.Schedule(this, jobs);
+
+			jobs = JobHandle.CombineDependencies(moveDownHandle, deleteHandle);
 		}
 
 		return jobs;
 	}
 
-	// PRIVATES METHODS
-
 	// JOBS
 
-	struct SyncLevel : IJobForEachWithEntity<Block, SwapCommand, Translation>
+	struct HighlightDeletedBlock : IJobForEachWithEntity<HighligthCommand, Scale>
+	{
+		public float dt;
+		public EntityCommandBuffer.Concurrent cmdBuffer;
+
+		// -- //
+
+		public void Execute(Entity entity, int index, ref HighligthCommand command, ref Scale scale)
+		{
+			var progress   = math.unlerp(command.duration, 0f, command.remain);
+			var blockScale = math.lerp(1f, 2f, progress);
+
+			scale.Value     = blockScale;
+			command.remain -= dt;
+
+			if(command.remain <= 0)
+				cmdBuffer.RemoveComponent<HighligthCommand>(index, entity);
+		}
+	}
+
+	struct SwapBlock : IJobForEachWithEntity<Block, SwapCommand, Translation>
 	{
 		public EntityCommandBuffer.Concurrent cmdBuffer;
 
@@ -110,17 +139,19 @@ public class SyncLevelSimulationToView : JobComponentSystem
 		}
 	}
 
-	struct DeleteBlock : IJobForEachWithEntity<Block, DeleteCommand>
+	[RequireComponentTag(typeof(Block))]
+	struct DeleteBlock : IJobForEachWithEntity<DeleteCommand>
 	{
 		public EntityCommandBuffer.Concurrent cmdBuffer;
 
 		// -- //
 
-		public void Execute(Entity entity, int index, ref Block block, [ReadOnly] ref DeleteCommand command)
+		public void Execute(Entity entity, int index, [ReadOnly] ref DeleteCommand command)
 		{
 			cmdBuffer.DestroyEntity(index, entity);
 		}
 	}
+
 }
 
 }

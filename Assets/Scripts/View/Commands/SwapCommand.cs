@@ -10,7 +10,7 @@ public struct SwapCommand : ICommand
 {
 	public int GetPriority()
 	{
-		return 10;
+		return 0;
 	}
 
 	// -- //
