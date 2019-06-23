@@ -12,15 +12,34 @@ public struct MoveDownCommand : ICommand
 		return 5;
 	}
 
-	// -- //
+	// PUBLICS FIELDS
 
 	public int2 destination;
 	public float duration;
 	public float remain;
-	public float3 startPos;
-	public bool startPosSet;
 
-	// -- //
+	// PRIVATES FIELDS
+
+	private float3 startPos;
+
+	// ACCESSORS
+
+	public float3 StartPos
+	{
+		get { return startPos; }
+		set
+		{
+			startPos    = value;
+			StartPosSet = true;
+		}
+	}
+
+	public bool StartPosSet
+	{
+		get; private set;
+	}
+
+	// INTERFACES
 
 	public MoveDownCommand(int2 destination, float duration)
 	{
@@ -28,7 +47,7 @@ public struct MoveDownCommand : ICommand
 		this.duration    = duration;
 		this.remain      = duration;
 		this.startPos    = float3.zero;
-		this.startPosSet = false;
+		this.StartPosSet = false;
 	}
 }
 

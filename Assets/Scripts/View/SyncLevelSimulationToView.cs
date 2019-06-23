@@ -91,12 +91,12 @@ public class SyncLevelSimulationToView : JobComponentSystem
 		public void Execute(Entity entity, int index, ref Block block,
 				ref MoveDownCommand command, ref Translation translation)
 		{
-			if(!command.startPosSet)
-				command.startPos = translation.Value;
+			if(!command.StartPosSet)
+				command.StartPos = translation.Value;
 
 			var worldPos = new float3(command.destination * 2, 0);
 			var progress = math.unlerp(command.duration, 0, command.remain);
-			var position = math.lerp(command.startPos, worldPos, progress);
+			var position = math.lerp(command.StartPos, worldPos, progress);
 
 			block.gridPosition = command.destination;
 			translation.Value  = position;

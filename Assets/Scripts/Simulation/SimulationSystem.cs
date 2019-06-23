@@ -475,7 +475,7 @@ public class SimulationSystem : JobComponentSystem
 					lowestY        = lowestY + levelInfo.size.x;
 					willMove       = true;
 
-					viewCmdStack.AddCommand(index, blockInfo.entity, new MoveDownCommand(destination: blockDest, duration: 2f));
+					viewCmdStack.AddCommand(index, blockInfo.entity, new MoveDownCommand(destination: blockDest, duration: 0.5f));
 				}
 			}
 
