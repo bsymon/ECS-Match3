@@ -26,6 +26,7 @@ public class ViewSystem : JobComponentSystem
 	{
 		cmdBuffer    = World.GetOrCreateSystem<ViewCmdBuffer>();
 		viewCmdStack = CommandStack.Get<ViewCommandStack>(100);
+
 	}
 
 	override protected JobHandle OnUpdate(JobHandle jobs)
