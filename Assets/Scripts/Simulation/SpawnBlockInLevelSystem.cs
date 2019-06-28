@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Transforms;
 using Game.GameElements.Runtime;
+using Game.Hybrid;
 
 namespace Game.Simulation
 {
@@ -109,7 +110,7 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 					continue;
 
 				var blockPrefab = blockPrefabs[UnityEngine.Random.Range(0, blockPrefabs.Length)];
-				var blockEntity = EntityManager.Instantiate(blockPrefab);
+				var blockEntity = EntityManager.InstantiateHybrid(blockPrefab);
 				var block       = EntityManager.GetComponentData<Block>(blockEntity);
 				var translation = EntityManager.GetComponentData<Translation>(blockEntity);
 
@@ -124,6 +125,10 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 
 				EntityManager.SetComponentData(blockEntity, block);
 				EntityManager.SetComponentData(blockEntity, translation);
+
+				var transform = EntityManager.GetComponentObject<UnityEngine.Transform>(blockEntity);
+				transform.position = translation.Value;
+				transform.localScale = new float3(1,1,1);
 			}
 		}
 	}

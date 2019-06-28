@@ -57,15 +57,16 @@ public class ViewSystem : JobComponentSystem
 				dt        = deltaTime
 			};
 
-			var moveDownHandle = moveDownBlock.Schedule(this, jobs);
+			// var moveDownHandle = moveDownBlock.Schedule(this, jobs);
+			jobs = moveDownBlock.Schedule(this, jobs);
 
-			var deleteBlock = new DeleteBlock() {
-				cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent()
-			};
+			// var deleteBlock = new DeleteBlock() {
+			// 	cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent()
+			// };
 
-			var deleteHandle = deleteBlock.Schedule(this, jobs);
+			// var deleteHandle = deleteBlock.Schedule(this, jobs);
 
-			jobs = JobHandle.CombineDependencies(moveDownHandle, deleteHandle);
+			// jobs = JobHandle.CombineDependencies(moveDownHandle, deleteHandle);
 		}
 
 		return jobs;

@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Entities;
 using Game.GameElements;
+using Game.Hybrid;
 
 namespace Game
 {
@@ -13,7 +12,7 @@ public class GameResourcesInit : MonoBehaviour
 	// INSPECTOR
 
 	[SerializeField]
-	private Block[] blockPrefabs = null;
+	private Hybrid.GameObjectEntity[] blockPrefabs = null;
 
 	[SerializeField]
 	private Pattern[] patternPrefabs = null;
@@ -41,9 +40,10 @@ public class GameResourcesInit : MonoBehaviour
 	{
 		foreach(var blockPrefab in blockPrefabs)
 		{
-			var blockEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(blockPrefab.gameObject, World.Active);
+			// var blockEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(blockPrefab.gameObject, World.Active);
+			var blockEntityPrefab = HybridUtils.ConvertGameObjectHierarchy(blockPrefab, World.Active);
 
-			entityManager.SetName(blockEntityPrefab, blockPrefab.gameObject.name);
+			// entityManager.SetName(blockEntityPrefab, blockPrefab.gameObject.name);
 		}
 	}
 

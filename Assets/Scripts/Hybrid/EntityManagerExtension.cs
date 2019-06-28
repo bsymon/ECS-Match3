@@ -9,10 +9,13 @@ public static class EntityManagerExtension
 	public static Entity Instantiate(this EntityManager entityManager, GameObjectEntity gameObject)
 	{
 		var instance = GameObject.Instantiate(gameObject);
-		var entity   = entityManager.Instantiate(gameObject.LinkedEntity);
+		// var entity   = entityManager.Instantiate(gameObject.LinkedEntity);
+		var entity = GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, entityManager.World);
 		instance.LinkedEntity = entity;
 
 		entityManager.SetName(entity, instance.gameObject.name);
+		entityManager.AddComponentObject(entity, instance.transform);
+		entityManager.AddComponentObject(entity, instance);
 
 		return entity;
 	}
@@ -34,10 +37,18 @@ public static class EntityManagerExtension
 		}
 	}
 
-	public static void Destroy(this EntityManager entityManager, GameObjectEntity gameObject)
+	public static void DestroyHybrid(this EntityManager entityManager, Entity entity)
 	{
-		entityManager.DestroyEntity(gameObject.LinkedEntity);
-		GameObject.Destroy(gameObject.gameObject);
+		try
+		{
+			var gameObject = entityManager.GetComponentObject<GameObjectEntity>(entity);
+			// entityManager.DestroyEntity(gameObject.LinkedEntity);
+			GameObject.Destroy(gameObject.gameObject);
+		}
+		catch(System.ArgumentException)
+		{
+			throw;
+		}
 	}
 }
 
