@@ -90,6 +90,7 @@ GameObject:
   - component: {fileID: 5883205248826313684}
   - component: {fileID: 1389728612707732623}
   - component: {fileID: 7903071968992493345}
+  - component: {fileID: 1417856703998604202}
   m_Layer: 0
   m_Name: PF_BaseBlock
   m_TagString: Untagged
@@ -126,7 +127,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objectRenderer: {fileID: 3046026595802873772}
   ignoredComponents: []
-  componentsToLink: []
+  componentsToLink:
+  - {fileID: 1417856703998604202}
 --- !u!114 &5883205248826313684
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -166,3 +168,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f922032aad1e4f109e892944af196e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!95 &1417856703998604202
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3046026596125858265}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 27a49206bbd86204dbeb20020c6a74f6, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0

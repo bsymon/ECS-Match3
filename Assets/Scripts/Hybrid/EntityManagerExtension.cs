@@ -9,12 +9,20 @@ public static class EntityManagerExtension
 	public static Entity Instantiate(this EntityManager entityManager, GameObjectEntity gameObject)
 	{
 		var instance = GameObject.Instantiate(gameObject);
+
+		instance.ObjectRenderer.enabled = false;
+		
 		var entity   = GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, entityManager.World);
 		instance.LinkedEntity = entity;
+
+		foreach(var component in instance.ComponentsToLink)
+			entityManager.AddComponentObject(entity, component);
 
 		entityManager.SetName(entity, instance.gameObject.name);
 		entityManager.AddComponentObject(entity, instance.transform);
 		entityManager.AddComponentObject(entity, instance);
+
+		instance.ObjectRenderer.enabled = true;
 
 		return entity;
 	}

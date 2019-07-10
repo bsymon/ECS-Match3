@@ -17,8 +17,8 @@ public static class HybridUtils
 		
 		gameObject.ObjectRenderer.enabled = false;
 		
-		foreach(var component in gameObject.IgnoredComponents)
-			component.enabled = false;
+		// foreach(var component in gameObject.IgnoredComponents)
+		// 	component.enabled = false;
 
 		var prefabEntity = GameObjectConversionUtility.ConvertGameObjectHierarchy(gameObject.gameObject, dstEntityWorld);
 
@@ -28,8 +28,8 @@ public static class HybridUtils
 		gameObject.LinkedEntity = prefabEntity;
 		gameObject.ObjectRenderer.enabled = true;
 
-		foreach(var component in gameObject.IgnoredComponents)
-			component.enabled = true;
+		// foreach(var component in gameObject.IgnoredComponents)
+		// 	component.enabled = true;
 		
 		return new ConvertedGameObject() {
 			entity     = prefabEntity,

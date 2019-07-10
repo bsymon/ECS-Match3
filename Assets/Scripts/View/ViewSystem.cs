@@ -57,16 +57,7 @@ public class ViewSystem : JobComponentSystem
 				dt        = deltaTime
 			};
 
-			// var moveDownHandle = moveDownBlock.Schedule(this, jobs);
 			jobs = moveDownBlock.Schedule(this, jobs);
-
-			// var deleteBlock = new DeleteBlock() {
-			// 	cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent()
-			// };
-
-			// var deleteHandle = deleteBlock.Schedule(this, jobs);
-
-			// jobs = JobHandle.CombineDependencies(moveDownHandle, deleteHandle);
 		}
 
 		return jobs;
@@ -86,7 +77,7 @@ public class ViewSystem : JobComponentSystem
 			var progress   = math.unlerp(command.duration, 0f, command.remain);
 			var blockScale = math.lerp(1f, 2f, progress);
 
-			scale.Value     = blockScale;
+			// scale.Value     = blockScale;
 			command.remain -= dt;
 
 			if(command.remain <= 0)

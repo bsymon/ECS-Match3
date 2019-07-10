@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 using Unity.Entities;
 using Game.GameElements.Runtime;
 using Game.Hybrid;
@@ -11,6 +12,7 @@ public class HybridViewSystem : ComponentSystem
 {
 	// PRIVATES
 
+	private EntityQuery highlightBlocksQuery;
 	private EntityQuery deleteBlocksQuery;
 	private ViewCmdBuffer cmdBuffer;
 	private ViewCommandStack viewCmdStack;
@@ -21,6 +23,11 @@ public class HybridViewSystem : ComponentSystem
 	
 	protected override void OnCreateManager()
 	{
+		highlightBlocksQuery = GetEntityQuery(
+			ComponentType.ReadOnly<Block>(),
+			ComponentType.ReadOnly<HighligthCommand>()
+		);
+		
 		deleteBlocksQuery = GetEntityQuery(
 			ComponentType.ReadOnly<Block>(),
 			ComponentType.ReadOnly<DeleteCommand>()
@@ -33,15 +40,26 @@ public class HybridViewSystem : ComponentSystem
 	
 	protected override void OnUpdate()
 	{
-		if(viewCmdStack.HasCommand<HighligthCommand>())
-			return;
+		if(!viewCmdStack.HasCommand<SwapCommand>())
+			HighligthBlocks();
 		
-		DeleteEntities();
+		if(!viewCmdStack.HasCommand<HighligthCommand>())
+			DeleteBlocks();
 	}
 
 	// PRIVATES METHODS
 
-	private void DeleteEntities()
+	private void HighligthBlocks()
+	{
+		Entities.With(highlightBlocksQuery).ForEach((Entity entity) => {
+			var animator = EntityManager.GetComponentObject<Animator>(entity);
+
+			animator.SetTrigger("Highlight");
+			Debug.Log("Set trigger");
+		});
+	}
+
+	private void DeleteBlocks()
 	{
 		// TODO (Benjamin) use a custom EntityCommandBuffer to use as PostCommandBuffer, that allows to destroys GameObject
 		
