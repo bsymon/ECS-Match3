@@ -382,7 +382,7 @@ public class SimulationSystem : JobComponentSystem
 
 			level[blockId] = Level.Empty;
 
-			viewCmdStack.AddCommand(index, block.entity, new HighligthCommand(duration: 0.5f));
+			viewCmdStack.AddCommand(index, block.entity, new HighligthCommand(duration: 0.2f));
 			viewCmdStack.AddCommand<DeleteCommand>(index, block.entity);
 		}
 	}

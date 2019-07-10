@@ -91,6 +91,7 @@ GameObject:
   - component: {fileID: 1389728612707732623}
   - component: {fileID: 7903071968992493345}
   - component: {fileID: 1417856703998604202}
+  - component: {fileID: 626257791318054295}
   m_Layer: 0
   m_Name: PF_BaseBlock
   m_TagString: Untagged
@@ -129,6 +130,7 @@ MonoBehaviour:
   ignoredComponents: []
   componentsToLink:
   - {fileID: 1417856703998604202}
+  - {fileID: 626257791318054295}
 --- !u!114 &5883205248826313684
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -187,3 +189,16 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &626257791318054295
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3046026596125858265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a56d8ed1a75a3d4b8eceda2dc8b28c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameObjectEntity: {fileID: 4197904853612667698}

@@ -40,16 +40,6 @@ public class ViewSystem : JobComponentSystem
 
 		jobs = swapBlocks.Schedule(this, jobs);
 
-		if(!viewCmdStack.HasCommand<SwapCommand>())
-		{
-			var highlight = new HighlightDeletedBlock() {
-				dt        = deltaTime,
-				cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent()
-			};
-
-			jobs = highlight.Schedule(this, jobs);
-		}
-
 		if(!viewCmdStack.HasCommand<HighligthCommand>())
 		{
 			var moveDownBlock = new MoveDown() {
@@ -64,26 +54,6 @@ public class ViewSystem : JobComponentSystem
 	}
 
 	// JOBS
-
-	struct HighlightDeletedBlock : IJobForEachWithEntity<HighligthCommand, Scale>
-	{
-		public float dt;
-		public EntityCommandBuffer.Concurrent cmdBuffer;
-
-		// -- //
-
-		public void Execute(Entity entity, int index, ref HighligthCommand command, ref Scale scale)
-		{
-			var progress   = math.unlerp(command.duration, 0f, command.remain);
-			var blockScale = math.lerp(1f, 2f, progress);
-
-			// scale.Value     = blockScale;
-			command.remain -= dt;
-
-			if(command.remain <= 0)
-				cmdBuffer.RemoveComponent<HighligthCommand>(index, entity);
-		}
-	}
 
 	struct SwapBlock : IJobForEachWithEntity<Block, SwapCommand, Translation>
 	{
