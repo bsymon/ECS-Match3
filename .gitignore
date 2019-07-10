@@ -32,3 +32,5 @@ sysinfo.txt
 *.unitypackage
 .vscode/
 /Logs
+/Assets/_Tests
+/Assets/_Tests.meta
