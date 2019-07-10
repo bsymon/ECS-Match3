@@ -9,8 +9,7 @@ public static class EntityManagerExtension
 	public static Entity Instantiate(this EntityManager entityManager, GameObjectEntity gameObject)
 	{
 		var instance = GameObject.Instantiate(gameObject);
-		// var entity   = entityManager.Instantiate(gameObject.LinkedEntity);
-		var entity = GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, entityManager.World);
+		var entity   = GameObjectConversionUtility.ConvertGameObjectHierarchy(instance.gameObject, entityManager.World);
 		instance.LinkedEntity = entity;
 
 		entityManager.SetName(entity, instance.gameObject.name);
@@ -42,7 +41,7 @@ public static class EntityManagerExtension
 		try
 		{
 			var gameObject = entityManager.GetComponentObject<GameObjectEntity>(entity);
-			// entityManager.DestroyEntity(gameObject.LinkedEntity);
+			entityManager.DestroyEntity(gameObject.LinkedEntity);
 			GameObject.Destroy(gameObject.gameObject);
 		}
 		catch(System.ArgumentException)

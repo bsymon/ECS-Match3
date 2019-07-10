@@ -40,10 +40,7 @@ public class GameResourcesInit : MonoBehaviour
 	{
 		foreach(var blockPrefab in blockPrefabs)
 		{
-			// var blockEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(blockPrefab.gameObject, World.Active);
 			var blockEntityPrefab = HybridUtils.ConvertGameObjectHierarchy(blockPrefab, World.Active);
-
-			// entityManager.SetName(blockEntityPrefab, blockPrefab.gameObject.name);
 		}
 	}
 

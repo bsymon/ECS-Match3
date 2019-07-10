@@ -1,9 +1,5 @@
-﻿using Unity.Burst;
-using Unity.Collections;
+﻿using System.Collections.Generic;
 using Unity.Entities;
-using Unity.Jobs;
-using Unity.Mathematics;
-using Unity.Transforms;
 using Game.GameElements.Runtime;
 using Game.Hybrid;
 using Game.Command;
@@ -18,6 +14,8 @@ public class HybridViewSystem : ComponentSystem
 	private EntityQuery deleteBlocksQuery;
 	private ViewCmdBuffer cmdBuffer;
 	private ViewCommandStack viewCmdStack;
+
+	private List<Entity> pendingDelete;
 	
 	// LIFE-CYCLE
 	
@@ -28,8 +26,9 @@ public class HybridViewSystem : ComponentSystem
 			ComponentType.ReadOnly<DeleteCommand>()
 		);
 
-		cmdBuffer    = World.GetOrCreateSystem<ViewCmdBuffer>();
-		viewCmdStack = CommandStack.Get<ViewCommandStack>(100);
+		cmdBuffer     = World.GetOrCreateSystem<ViewCmdBuffer>();
+		viewCmdStack  = CommandStack.Get<ViewCommandStack>(100);
+		pendingDelete = new List<Entity>();
 	}
 	
 	protected override void OnUpdate()
@@ -37,10 +36,23 @@ public class HybridViewSystem : ComponentSystem
 		if(viewCmdStack.HasCommand<HighligthCommand>())
 			return;
 		
+		DeleteEntities();
+	}
+
+	// PRIVATES METHODS
+
+	private void DeleteEntities()
+	{
+		// TODO (Benjamin) use a custom EntityCommandBuffer to use as PostCommandBuffer, that allows to destroys GameObject
+		
 		Entities.With(deleteBlocksQuery).ForEach((Entity entity) => {
-			EntityManager.DestroyHybrid(entity);
-			PostUpdateCommands.DestroyEntity(entity);
+			pendingDelete.Add(entity);
 		});
+
+		foreach(var entity in pendingDelete)
+			EntityManager.DestroyHybrid(entity);
+		
+		pendingDelete.Clear();
 	}
 }
 
