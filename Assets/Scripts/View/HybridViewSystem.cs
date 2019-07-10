@@ -48,10 +48,10 @@ public class HybridViewSystem : ComponentSystem
 	{
 		ListenAnimationEvents();
 
-		if(!viewCmdStack.HasCommand<SwapCommand>())
+		if(viewCmdStack.CanExecute<HighligthCommand>())
 			HighligthBlocks();
 
-		if(!viewCmdStack.HasCommand<HighligthCommand>())
+		if(viewCmdStack.CanExecute<DeleteCommand>())
 			DeleteBlocks();
 	}
 
@@ -72,7 +72,7 @@ public class HybridViewSystem : ComponentSystem
 		switch(eventName)
 		{
 			case "HighlighCommandOver":
-				EntityManager.RemoveComponent<HighligthCommand>(entity);
+				EntityManager.RemoveComponent<HighlightPendingCommand>(entity);
 			break;
 		}
 	}
@@ -83,6 +83,9 @@ public class HybridViewSystem : ComponentSystem
 			var animator = EntityManager.GetComponentObject<Animator>(entity);
 
 			animator.SetTrigger("Highlight");
+
+			viewCmdStack.AddCommand<HighlightPendingCommand>(entity);
+			PostUpdateCommands.RemoveComponent<HighligthCommand>(entity);
 		});
 	}
 

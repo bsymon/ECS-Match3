@@ -9,7 +9,7 @@ public struct MoveDownCommand : ICommand
 {
 	public int GetPriority()
 	{
-		return 20;
+		return 30;
 	}
 
 	// PUBLICS FIELDS

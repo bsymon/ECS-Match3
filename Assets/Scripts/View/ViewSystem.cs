@@ -40,7 +40,7 @@ public class ViewSystem : JobComponentSystem
 
 		jobs = swapBlocks.Schedule(this, jobs);
 
-		if(!viewCmdStack.HasCommand<HighligthCommand>())
+		if(viewCmdStack.CanExecute<MoveDownCommand>())
 		{
 			var moveDownBlock = new MoveDown() {
 				cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent(),

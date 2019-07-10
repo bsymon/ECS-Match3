@@ -9,7 +9,7 @@ public struct DeleteCommand : ICommand
 {
 	public int GetPriority()
 	{
-		return 100;
+		return 20;
 	}
 }
 

@@ -148,10 +148,9 @@ public abstract class CommandStack : EntityCommandBufferSystem
 		};
 	}
 
-	public bool HasCommand<T>() where T : struct, ICommand
+	public bool CanExecute<T>() where T : struct, ICommand
 	{
-		var command = new T(); // NOTE (Benjamin) should find another way to get the priority
-								//				instead of creating a new instance
+		var command = new T();
 		var commandPriority = command.GetPriority();
 		var commandsRemain  = 0;
 
@@ -160,14 +159,14 @@ public abstract class CommandStack : EntityCommandBufferSystem
 			var prio  = item.Value;
 			var index = cachedCommandsIndex[item.Key];
 
-			if(prio > commandPriority)
-				continue;
-
-			var query = queries[index];
-			commandsRemain += query.CalculateLength();
+			if(prio < commandPriority)
+			{
+				var query = queries[index];
+				commandsRemain += query.CalculateLength();
+			}
 		}
 
-		return commandsRemain > 0;
+		return commandsRemain == 0;
 	}
 
 	// STATIC METHODS
