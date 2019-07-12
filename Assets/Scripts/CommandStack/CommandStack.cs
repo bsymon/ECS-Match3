@@ -148,6 +148,19 @@ public abstract class CommandStack : EntityCommandBufferSystem
 		};
 	}
 
+	public bool HasCommand<T>() where T : struct, ICommand
+	{
+		var commandType = ComponentType.ReadOnly<T>();
+		var key         = commandType.GetManagedType().GetHashCode();
+
+		if(cachedCommandsIndex.TryGetValue(key, out var index))
+		{
+			return queries[index].CalculateLength() > 0;
+		}
+
+		return false;
+	}
+
 	public bool CanExecute<T>() where T : struct, ICommand
 	{
 		var command = new T();

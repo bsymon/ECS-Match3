@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
+using Game.View;
 
 namespace Game.GameElements
 {
@@ -39,6 +40,11 @@ public class Level : MonoBehaviour, IConvertGameObjectToEntity
 
 		dstManager.AddComponentData(entity, levelInfo);
 		dstManager.SetName(entity, gameObject.name);
+
+		var hybridView = World.Active.GetOrCreateSystem<HybridViewSystem>();
+
+		hybridView.LevelEntiy = entity;
+		hybridView.LevelInfo  = levelInfo;
 	}
 
 }

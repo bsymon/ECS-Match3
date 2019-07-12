@@ -26,7 +26,6 @@ public class ViewSystem : JobComponentSystem
 	{
 		cmdBuffer    = World.GetOrCreateSystem<ViewCmdBuffer>();
 		viewCmdStack = CommandStack.Get<ViewCommandStack>(100);
-
 	}
 
 	override protected JobHandle OnUpdate(JobHandle jobs)
@@ -101,20 +100,6 @@ public class ViewSystem : JobComponentSystem
 			}
 		}
 	}
-
-	[RequireComponentTag(typeof(Block))]
-	struct DeleteBlock : IJobForEachWithEntity<DeleteCommand>
-	{
-		public EntityCommandBuffer.Concurrent cmdBuffer;
-
-		// -- //
-
-		public void Execute(Entity entity, int index, [ReadOnly] ref DeleteCommand command)
-		{
-			cmdBuffer.DestroyEntity(index, entity);
-		}
-	}
-
 }
 
 }

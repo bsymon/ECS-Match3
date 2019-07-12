@@ -4,6 +4,8 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using Game.GameElements.Runtime;
 using Game.Hybrid;
+using Game.View;
+using Game.Command;
 
 namespace Game.Simulation
 {
@@ -13,18 +15,27 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 
 	// PRIVATES FIELDS
 
+	private SimulationSystem simulationSystem;
+	private ViewCommandStack viewCmdStack;
+
 	private EntityQuery blockPrefabsQuery;
 	private bool blockPrefabsInit;
 	private Entity[] blockPrefabs;
 
 	private EntityQuery levelQuery;
+	private Entity levelEntity;
+	private LevelInfo levelInfo;
 
 	private bool levelFirstInit;
+	private bool wasMovingDownCommand;
 
 	// LIFE-CYCLE
 
 	override protected void OnCreateManager()
 	{
+		simulationSystem = World.GetOrCreateSystem<SimulationSystem>();
+		viewCmdStack     = CommandStack.Get<ViewCommandStack>(100);
+
 		blockPrefabsQuery = GetEntityQuery(
 			ComponentType.ReadOnly<Block>(),
 			ComponentType.ReadOnly<Prefab>()
@@ -33,21 +44,29 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 		levelQuery = GetEntityQuery(
 			ComponentType.ReadOnly<LevelInfo>()
 		);
+
+		wasMovingDownCommand = true;
+	}
+
+	protected override void OnStartRunning()
+	{
+		levelInfo = GetLevelInfo(out levelEntity);
+		InitBlockPrefabs();
 	}
 
 	override protected void OnUpdate()
 	{
-		// TODO (Benjamin) maybe do init in OnStartRunning()
-		if(!blockPrefabsInit)
-			InitBlockPrefabs();
-
-		var levelInfo = GetLevelInfo(out var levelEntity);
-
 		if(!levelFirstInit)
 		{
 			InitLevel(levelEntity, levelInfo);
-			SpawnBlock(levelEntity, levelInfo);
 		}
+
+		var currentMovingDownCommand = viewCmdStack.HasCommand<MoveDownCommand>();
+
+		if(!simulationSystem.HasPendingMatchRequests && !currentMovingDownCommand && wasMovingDownCommand)
+			SpawnBlock(levelEntity, levelInfo);
+
+		wasMovingDownCommand = currentMovingDownCommand;
 	}
 
 	// PRIVATES METHODS

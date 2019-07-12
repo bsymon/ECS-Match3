@@ -31,6 +31,13 @@ public class SimulationSystem : JobComponentSystem
 
 	private ViewCommandStack viewCmdStack;
 
+	// ACCESSORS
+
+	public bool HasPendingMatchRequests
+	{
+		get { return patternMatchRequest.IsCreated && patternMatchRequest.Count > 0; }
+	}
+
 	// LIFE-CYCLE
 
 	protected override void OnCreateManager()
