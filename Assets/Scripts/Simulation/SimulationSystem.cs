@@ -54,8 +54,7 @@ public class SimulationSystem : JobComponentSystem
 		);
 
 		patternsQuery = GetEntityQuery(
-			ComponentType.ReadOnly<PatternInfo>(),
-			ComponentType.ReadOnly<Prefab>()
+			ComponentType.ReadOnly<PatternInfo>()
 		);
 	}
 
@@ -79,10 +78,7 @@ public class SimulationSystem : JobComponentSystem
 	protected override JobHandle OnUpdate(JobHandle jobs)
 	{
 		if(viewCmdStack.Count > 0)
-		{
-			// Debug.Log("View has commands");
 			return jobs;
-		}
 
 		if(patternMatchRequest.IsCreated)
 		{

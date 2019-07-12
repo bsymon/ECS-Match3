@@ -469,6 +469,10 @@ MonoBehaviour:
   - {fileID: 6913187847794503511, guid: 4b220c334c9a0c940b7db92b06d3e883, type: 3}
   - {fileID: 6913187847794503511, guid: 7b8a556e5bc0ef3448599e1c17408933, type: 3}
   - {fileID: 6913187847794503511, guid: fb63423fbf38a4146a5070b43ca3cdc5, type: 3}
+  patternAssets:
+  - {fileID: 11400000, guid: f796e5267c03ba540b6c838e2f9bd83a, type: 2}
+  - {fileID: 11400000, guid: 82ad64178364edf4caaf17def8cc5251, type: 2}
+  - {fileID: 11400000, guid: 6e05db026b1e86946bab5791ad53f2e6, type: 2}
   inputPlaceholderPrefab: {fileID: 0}
 --- !u!1 &1276147708
 GameObject:

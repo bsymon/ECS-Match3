@@ -5,13 +5,9 @@ using Unity.Mathematics;
 namespace Game.GameElements
 {
 
-public class Pattern : MonoBehaviour, IConvertGameObjectToEntity
+[CreateAssetMenu(menuName="Game/Pattern")]
+public class Pattern : ScriptableObject
 {
-	// TODO (Benjamin) don't use a GameObject to store pattern
-	//					when converted, will pay the cost of all Transform convertion
-	//					and systems overhead
-	//					Use instead a ScriptableObject and maybe store it as BlobAssetReference ...
-
 	// INSPECTOR
 
 	[SerializeField]
@@ -20,11 +16,12 @@ public class Pattern : MonoBehaviour, IConvertGameObjectToEntity
 	[SerializeField]
 	private bool[] pattern = null;
 
-	// INTERFACES
+	// CONVERT
 
-	public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
+	public Entity Convert(EntityManager entityManager)
 	{
-		var patternBuffer = dstManager.AddBuffer<Runtime.Pattern>(entity);
+		var entity        = entityManager.CreateEntity();
+		var patternBuffer = entityManager.AddBuffer<Runtime.Pattern>(entity);
 		var blocksCount   = 0;
 
 		for(var i = 0; i < size.x * size.y; ++i)
@@ -33,11 +30,13 @@ public class Pattern : MonoBehaviour, IConvertGameObjectToEntity
 			patternBuffer.Add(pattern[i]);
 		}
 
-		dstManager.AddComponentData(entity, new Runtime.PatternInfo() {
+		entityManager.AddComponentData(entity, new Runtime.PatternInfo() {
 			size   = new int2(size.x, size.y),
 			blocks = blocksCount,
 			entity = entity
 		});
+
+		return entity;
 	}
 }
 

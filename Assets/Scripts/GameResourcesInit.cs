@@ -15,7 +15,7 @@ public class GameResourcesInit : MonoBehaviour
 	private Hybrid.GameObjectEntity[] blockPrefabs = null;
 
 	[SerializeField]
-	private Pattern[] patternPrefabs = null;
+	private Pattern[] patternAssets = null;
 
 	[SerializeField]
 	private BoxCollider2D inputPlaceholderPrefab = null;
@@ -46,14 +46,11 @@ public class GameResourcesInit : MonoBehaviour
 
 	private void LoadPatternPrefabs()
 	{
-		foreach(var patternPrefab in patternPrefabs)
+		foreach(var patternAsset in patternAssets)
 		{
-			if(!patternPrefab.gameObject.activeSelf)
-				continue;
+			var patternEntity = patternAsset.Convert(entityManager);
 
-			var blockEntityPrefab = GameObjectConversionUtility.ConvertGameObjectHierarchy(patternPrefab.gameObject, World.Active);
-
-			entityManager.SetName(blockEntityPrefab, patternPrefab.gameObject.name);
+			entityManager.SetName(patternEntity, patternAsset.name);
 		}
 	}
 
