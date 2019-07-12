@@ -56,15 +56,15 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 
 	override protected void OnUpdate()
 	{
+		var isFirstInit = !levelFirstInit;
+
 		if(!levelFirstInit)
-		{
 			InitLevel(levelEntity, levelInfo);
-		}
 
 		var currentMovingDownCommand = viewCmdStack.HasCommand<MoveDownCommand>();
 
 		if(!simulationSystem.HasPendingMatchRequests && !currentMovingDownCommand && wasMovingDownCommand)
-			SpawnBlock(levelEntity, levelInfo);
+			SpawnBlock(levelEntity, levelInfo, isFirstInit);
 
 		wasMovingDownCommand = currentMovingDownCommand;
 	}
@@ -115,7 +115,7 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 		levelFirstInit = true;
 	}
 
-	private void SpawnBlock(Entity levelEntity, LevelInfo levelInfo)
+	private void SpawnBlock(Entity levelEntity, LevelInfo levelInfo, bool finalPosition)
 	{
 		for(var y = 0; y < levelInfo.size.y; ++y)
 		{
@@ -138,16 +138,18 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 				currentBlock.entity  = blockEntity;
 				translation.Value    = new float3(block.gridPosition * 2, 0);
 
+				if(!finalPosition)
+				{
+					translation.Value += new float3(0, levelInfo.size.y, 0);
+					viewCmdStack.AddCommand(blockEntity, new MoveDownCommand(destination: block.gridPosition, duration: 0.5f));
+				}
+
 				levelBuffer = EntityManager.GetBuffer<Level>(levelEntity); // NOTE (Benjamin) get the buffer again, because it is deallocated after any method call of EntityManager ...
 
 				levelBuffer[i] = currentBlock;
 
 				EntityManager.SetComponentData(blockEntity, block);
 				EntityManager.SetComponentData(blockEntity, translation);
-
-				var transform = EntityManager.GetComponentObject<UnityEngine.Transform>(blockEntity);
-				transform.position = translation.Value;
-				transform.localScale = new float3(1,1,1);
 			}
 		}
 	}
