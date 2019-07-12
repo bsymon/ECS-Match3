@@ -50,7 +50,9 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 
 	protected override void OnStartRunning()
 	{
-		levelInfo = GetLevelInfo(out levelEntity);
+		levelEntity = levelQuery.GetSingletonEntity();
+		levelInfo   = levelQuery.GetSingleton<LevelInfo>();
+
 		InitBlockPrefabs();
 	}
 
@@ -78,26 +80,6 @@ public class SpawnBlockInLevelSystem : ComponentSystem
 		blockPrefabsInit = true;
 
 		nativeArray.Dispose();
-	}
-
-	private LevelInfo GetLevelInfo(out Entity levelEntity)
-	{
-		var compSet = false;
-		LevelInfo temp_Level    = default(LevelInfo);
-		Entity temp_LevelEntity = Entity.Null;
-
-		Entities.With(levelQuery).ForEach((Entity entity, ref LevelInfo levelInfo) => {
-			if(!compSet)
-			{
-				temp_Level       = levelInfo;
-				temp_LevelEntity = entity;
-				compSet          = true;
-			}
-		});
-
-		levelEntity = temp_LevelEntity;
-
-		return temp_Level;
 	}
 
 	private void InitLevel(Entity levelEntity, LevelInfo levelInfo)

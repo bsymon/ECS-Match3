@@ -19,7 +19,7 @@ public class SimulationSystem : JobComponentSystem
 	private SimulationCmdBuffer cmdBuffer;
 
 	private EntityQuery levelQuery;
-	private LevelInfo level;
+	private LevelInfo levelInfo;
 	private Entity levelEntity;
 
 	private EntityQuery swapQueriesQuery;
@@ -65,7 +65,9 @@ public class SimulationSystem : JobComponentSystem
 
 		patternMatchRequest = new NativeQueue<int2>(Allocator.Persistent);
 		unswap              = new NativeHashMap<int, bool>(10, Allocator.Persistent);
-		GetLevelInfo();
+
+		levelEntity = levelQuery.GetSingletonEntity();
+		levelInfo   = levelQuery.GetSingleton<LevelInfo>();
 	}
 
 	protected override void OnStopRunning()
@@ -90,7 +92,7 @@ public class SimulationSystem : JobComponentSystem
 
 		var swapTestJob = new SwapTest() {
 			level     = EntityManager.GetBuffer<Level>(levelEntity),
-			levelInfo = level,
+			levelInfo = levelInfo,
 			cmdBuff   = jobCmdBuffer,
 			patternMatchRequest = patternMatchRequest.ToConcurrent(),
 			viewCmdStack = viewCmdStack.ToConcurrent()
@@ -101,14 +103,14 @@ public class SimulationSystem : JobComponentSystem
 			patternMatchRequest  = patternMatchRequest,
 			patternsInfo         = patterns,
 			levelBufferLookup    = GetBufferFromEntity<Level>(isReadOnly: true),
-			levelInfo            = level,
+			levelInfo            = levelInfo,
 			blocksToDelete       = blocksToDelete,
 			unswap = unswap.ToConcurrent()
 		};
 
 		var performSwap = new PerformSwap() {
 			level     = EntityManager.GetBuffer<Level>(levelEntity),
-			levelInfo = level,
+			levelInfo = levelInfo,
 			unswap    = unswap,
 			cmdBuffer = jobCmdBuffer,
 			viewCmdStack = viewCmdStack.ToConcurrent()
@@ -117,13 +119,13 @@ public class SimulationSystem : JobComponentSystem
 		var deleteBlocks = new DeleteBlock() {
 			blocksToDelete    = blocksToDelete,
 			levelBufferLookup = GetBufferFromEntity<Level>(isReadOnly: false),
-			levelInfo         = level,
+			levelInfo         = levelInfo,
 			cmdBuffer         = jobCmdBuffer,
 			viewCmdStack = viewCmdStack.ToConcurrent()
 		};
 
 		var moveDownBlocks = new MoveDownBlocks() {
-			levelInfo         = level,
+			levelInfo         = levelInfo,
 			levelBufferLookup = GetBufferFromEntity<Level>(isReadOnly: false),
 			viewCmdStack      = viewCmdStack.ToConcurrent(),
 			patternMatchRequest = patternMatchRequest.ToConcurrent()
@@ -133,23 +135,9 @@ public class SimulationSystem : JobComponentSystem
 		jobs = patternMatching.Schedule(jobs);
 		jobs = performSwap.Schedule(this, jobs);
 		jobs = deleteBlocks.Schedule(blocksToDelete.Length, 2, jobs);
-		jobs = moveDownBlocks.Schedule(level.size.x, 2, jobs);
+		jobs = moveDownBlocks.Schedule(levelInfo.size.x, 2, jobs);
 
 		return jobs;
-	}
-
-	// PRIVATES METHODS
-
-	private void GetLevelInfo()
-	{
-		var temp_level       = levelQuery.ToComponentDataArray<LevelInfo>(Allocator.TempJob);
-		var temp_levelEntity = levelQuery.ToEntityArray(Allocator.TempJob);
-
-		level       = temp_level[0];
-		levelEntity = temp_levelEntity[0];
-
-		temp_level.Dispose();
-		temp_levelEntity.Dispose();
 	}
 
 	// JOBS

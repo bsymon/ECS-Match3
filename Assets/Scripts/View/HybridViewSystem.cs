@@ -10,11 +10,6 @@ namespace Game.View
 
 public class HybridViewSystem : ComponentSystem
 {
-	// INJECT
-
-	public Entity LevelEntiy { get; set; }
-	public LevelInfo LevelInfo { get; set; }
-
 	// PRIVATES
 
 	private EntityQuery blocksWithAnimationQuery;
