@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using Unity.Entities;
 
-namespace Game.GameElements
+namespace Game.GameElements.Authoring
 {
 
 public class Block : MonoBehaviour, IConvertGameObjectToEntity
@@ -35,6 +35,7 @@ public class Block : MonoBehaviour, IConvertGameObjectToEntity
 		sprite.SetPropertyBlock(materialProp);
 
 		dstManager.AddComponentData(entity, new Runtime.Block() { blockId = blockId });
+		dstManager.AddComponentData(entity, new SpawnedBlock());
 		dstManager.AddComponentData(entity, new Unity.Transforms.Scale() { Value = 1 });
 	}
 }

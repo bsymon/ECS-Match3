@@ -5,6 +5,7 @@ using Unity.Transforms;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Game.GameElements.Runtime;
+using Game.GameElements;
 using Game.Command;
 
 namespace Game.View
@@ -20,12 +21,23 @@ public class ViewSystem : JobComponentSystem
 	private ViewCmdBuffer cmdBuffer;
 	private ViewCommandStack viewCmdStack;
 
+	private EntityQuery levelQuery;
+	private Entity levelEntity;
+	private LevelInfo levelInfo;
+
 	// LIFE-CYCLE
 
 	override protected void OnCreateManager()
 	{
 		cmdBuffer    = World.GetOrCreateSystem<ViewCmdBuffer>();
 		viewCmdStack = CommandStack.Get<ViewCommandStack>(100);
+		levelQuery   = GetEntityQuery(ComponentType.ReadOnly<LevelInfo>());
+	}
+
+	protected override void OnStartRunning()
+	{
+		levelEntity = levelQuery.GetSingletonEntity();
+		levelInfo   = levelQuery.GetSingleton<LevelInfo>();
 	}
 
 	override protected JobHandle OnUpdate(JobHandle jobs)
@@ -37,13 +49,21 @@ public class ViewSystem : JobComponentSystem
 			cmdBuffer = cmdBufferConcurrent
 		};
 
+		var initBlockPos = new SetSpawnedBlockToInitialPosition() {
+			levelInfo    = levelInfo,
+			cmdBuffer    = cmdBufferConcurrent,
+			viewCmdStack = viewCmdStack.ToConcurrent()
+		};
+
 		jobs = swapBlocks.Schedule(this, jobs);
+		jobs = initBlockPos.Schedule(this, jobs);
 
 		if(viewCmdStack.CanExecute<MoveDownCommand>())
 		{
 			var moveDownBlock = new MoveDown() {
 				cmdBuffer = cmdBuffer.CreateCommandBuffer().ToConcurrent(),
-				dt        = deltaTime
+				dt        = deltaTime,
+				levelInfo = levelInfo
 			};
 
 			jobs = moveDownBlock.Schedule(this, jobs);
@@ -70,10 +90,31 @@ public class ViewSystem : JobComponentSystem
 		}
 	}
 
+	[RequireComponentTag(typeof(SpawnedBlock))]
+	struct SetSpawnedBlockToInitialPosition : IJobForEachWithEntity<Block, Translation>
+	{
+		public LevelInfo levelInfo;
+		public EntityCommandBuffer.Concurrent cmdBuffer;
+		public ViewCommandStack.Concurrent viewCmdStack;
+
+		// -- //
+
+		public void Execute(Entity entity, int index, ref Block block, ref Translation translation)
+		{
+			var worldPos = new float3((float2) block.gridPosition * levelInfo.blockSize, 0);
+			worldPos.y  += levelInfo.size.y;
+
+			translation.Value = worldPos;
+
+			viewCmdStack.AddCommand(index, entity, new MoveDownCommand(destination: block.gridPosition, duration: 0.5f));
+			cmdBuffer.RemoveComponent<SpawnedBlock>(index, entity);
+		}
+	}
+
 	struct MoveDown : IJobForEachWithEntity<Block, MoveDownCommand, Translation>
 	{
-		[ReadOnly]
 		public float dt;
+		public LevelInfo levelInfo;
 
 		public EntityCommandBuffer.Concurrent cmdBuffer;
 
@@ -85,7 +126,7 @@ public class ViewSystem : JobComponentSystem
 			if(!command.StartPosSet)
 				command.StartPos = translation.Value;
 
-			var worldPos = new float3(command.destination * 2, 0);
+			var worldPos = new float3((float2) command.destination * levelInfo.blockSize, 0);
 			var progress = math.unlerp(command.duration, 0, command.remain);
 			var position = math.lerp(command.StartPos, worldPos, progress);
 

@@ -13,12 +13,12 @@ public class Level : MonoBehaviour, IConvertGameObjectToEntity
 	[SerializeField]
 	private int2 levelSize;
 
+	[SerializeField]
+	private float blockSize;
+
 	// ACCESSORS
 
-	public int2 LevelSize
-	{
-		get { return levelSize; }
-	}
+	public int2 LevelSize => levelSize;
 
 	public Entity LevelEntity
 	{
@@ -33,8 +33,9 @@ public class Level : MonoBehaviour, IConvertGameObjectToEntity
 
 		var levelBuffer = dstManager.AddBuffer<Runtime.Level>(entity);
 		var levelInfo   = new Runtime.LevelInfo() {
-			size   = levelSize,
-			entity = entity
+			size      = levelSize,
+			entity    = entity,
+			blockSize = blockSize
 		};
 
 		dstManager.AddComponentData(entity, levelInfo);
